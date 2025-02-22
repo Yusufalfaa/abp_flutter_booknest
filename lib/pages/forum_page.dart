@@ -17,6 +17,14 @@ class ForumPage extends StatelessWidget {
       ),
       endDrawer: buildDrawer(context, '/forum'),
       body: const Center(child: Text("This is Forum Page")),
+
+      // Floating Action Button
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
+        onPressed: () => Navigator.pushNamed(context, '/faq'),
+        shape: const CircleBorder(),
+        child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
+      ),
     );
   }
 }

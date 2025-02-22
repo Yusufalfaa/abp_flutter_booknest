@@ -17,6 +17,14 @@ class AllBooksPage extends StatelessWidget {
       ),
       endDrawer: buildDrawer(context, '/all-books'),
       body: const Center(child: Text("This is All Books Page")),
+
+      // Floating Action Button
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
+        onPressed: () => Navigator.pushNamed(context, '/faq'),
+        shape: const CircleBorder(),
+        child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
+      ),
     );
   }
 }

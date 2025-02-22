@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'pages/all_books_page.dart';
 import 'pages/forum_page.dart';
 import 'pages/mybooks_page.dart';
+import 'pages/faq_page.dart';
+import 'pages/sign_in_page.dart';
 
 // Warna yang digunakan dalam aplikasi
 const Color lightColor = Color(0xFFF1EFE3);
@@ -36,6 +38,12 @@ class MyApp extends StatelessWidget {
           case '/my-books':
             page = const MyBooksPage();
             break;
+          case '/faq':
+            page = const FaqPage();
+            break;
+          case '/sign-in':
+            page = const SignInPage();
+            break;
           case '/':
           default:
             page = const MyHomePage();
@@ -65,6 +73,14 @@ class MyHomePage extends StatelessWidget {
       ),
       endDrawer: buildDrawer(context, '/'),
       body: const Center(child: Text("Welcome to Home Page")),
+
+      // Floating Action Button
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: primaryColor,
+        onPressed: () => Navigator.pushNamed(context, '/faq'),
+        shape: const CircleBorder(),
+        child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
+      ),
     );
   }
 }
@@ -73,15 +89,43 @@ class MyHomePage extends StatelessWidget {
 Widget buildDrawer(BuildContext context, String currentRoute) {
   return Drawer(
     backgroundColor: backgroundColor,
-    child: ListView(
+    child: Column(
       children: [
+        // Logo
         ListTile(
           title: Center(child: Image.asset("assets/BookNest.png", height: 30)),
         ),
-        _buildDrawerItem(context, 'Home', '/', currentRoute),
-        _buildDrawerItem(context, 'All Books', '/all-books', currentRoute),
-        _buildDrawerItem(context, 'Forum', '/forum', currentRoute),
-        _buildDrawerItem(context, 'MyBooks', '/my-books', currentRoute),
+
+        const Divider(thickness: 1, color: Colors.grey),
+        // Menu Items
+        Expanded(
+          child: ListView(
+            children: [
+              _buildDrawerItem(context, 'Home', '/', currentRoute),
+              _buildDrawerItem(context, 'All Books', '/all-books', currentRoute),
+              _buildDrawerItem(context, 'Forum', '/forum', currentRoute),
+              _buildDrawerItem(context, 'MyBooks', '/my-books', currentRoute),
+
+              // Garis pemisah sebelum FAQ
+              const Divider(thickness: 1, color: Colors.grey),
+
+              // FAQ Item
+              _buildDrawerItem(context, 'FAQ', '/faq', currentRoute),
+              _buildDrawerItem(context, 'Sign In', '/sign-in', currentRoute),
+            ],
+          ),
+        ),
+        // Footer (Copyright Text)
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Text(
+              '© 2025 BookNest',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ),
+        ),
       ],
     ),
   );
@@ -99,7 +143,7 @@ Widget _buildDrawerItem(BuildContext context, String title, String route, String
       ),
     ),
     selected: isSelected,
-    selectedTileColor: backgroundColor.withOpacity(0.5),
+    selectedTileColor: backgroundColor,
     onTap: () {
       Navigator.pop(context);
       if (!isSelected) {

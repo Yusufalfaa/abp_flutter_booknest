@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 
-class MyBooksPage extends StatelessWidget {
-  const MyBooksPage({super.key});
+class FaqPage extends StatelessWidget {
+  const FaqPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,14 +15,17 @@ class MyBooksPage extends StatelessWidget {
           icon: Image.asset("assets/BookNest.png", height: 40),
         ),
       ),
-      endDrawer: buildDrawer(context, '/my-books'),
-      body: const Center(child: Text("This is My Books Page")),
+      endDrawer: buildDrawer(context, '/faq'), // Sesuaikan route agar ter-highlight di Drawer
+      body: const Center(child: Text("This is FAQ Page")),
 
-      // Floating Action Button
+      // Floating Action Button tetap ada untuk konsistensi
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
-        onPressed: () => Navigator.pushNamed(context, '/faq'),
-        shape: const CircleBorder(),
+        onPressed: () {
+          if (ModalRoute.of(context)?.settings.name != '/faq') {
+            Navigator.pushNamed(context, '/faq');
+          }
+        },
         child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
       ),
     );
