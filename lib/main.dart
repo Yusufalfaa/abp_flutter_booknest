@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart'; // Tambahkan ini
+import 'pages/home_page.dart';
 import 'pages/all_books_page.dart';
 import 'pages/forum_page.dart';
 import 'pages/mybooks_page.dart';
@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
             break;
           case '/':
           default:
-            page = const MyHomePage();
+            page = const HomePage();
         }
         return MaterialPageRoute(
           builder: (context) => page,

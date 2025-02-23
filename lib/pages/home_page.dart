@@ -1,12 +1,38 @@
 import 'package:flutter/material.dart';
+import '../pages/all_books_page.dart';
+import '../pages/forum_page.dart';
+import '../pages/mybooks_page.dart';
+import '../pages/faq_page.dart';
+import 'package:http/http.dart';
 
 const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
 const Color primaryColor = Color(0xFFC76E6F);
 const Color blackColor = Color(0xFF272727);
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
+  bool _isFaqPage = false;
+
+  final List<Widget> _pages = [
+    Center(child: Text("Welcome to Home Page")),
+    const AllBooksPage(),
+    const ForumPage(),
+    const MyBooksPage(),
+  ];
+
+  void _openFaqPage() {
+    setState(() {
+      _isFaqPage = true;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +45,37 @@ class MyHomePage extends StatelessWidget {
           icon: Image.asset("assets/BookNest.png", height: 40),
         ),
       ),
-      endDrawer: buildDrawer(context, '/'),
-      body: const Center(child: Text("Welcome to Home Page")),
+      endDrawer: buildDrawer(context),
+      body: _isFaqPage ? const FaqPage() : _pages[_selectedIndex],
 
-      // Floating Action Button
+      // Bottom Navigation Bar
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'All Books'),
+          BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
+          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'MyBooks'),
+        ],
+        currentIndex: _isFaqPage ? _selectedIndex : _selectedIndex,
+        backgroundColor: lightColor,
+        selectedItemColor: _isFaqPage ? blackColor : primaryColor,
+        unselectedItemColor: blackColor,
+        selectedFontSize: 14,
+        unselectedFontSize: 14,
+        onTap: (index) {
+          setState(() {
+            _isFaqPage = false;
+            _selectedIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+      ),
+
+
+      // Floating Action Button untuk membuka FAQ
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
-        onPressed: () => Navigator.pushNamed(context, '/faq'),
+        onPressed: _openFaqPage,
         shape: const CircleBorder(),
         child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
       ),
@@ -33,45 +83,29 @@ class MyHomePage extends StatelessWidget {
   }
 }
 
-// Widget Drawer untuk semua halaman
-Widget buildDrawer(BuildContext context, String currentRoute) {
+// Widget Drawer hanya untuk Sign In
+Widget buildDrawer(BuildContext context) {
   return Drawer(
     backgroundColor: backgroundColor,
     child: Column(
       children: [
-        // Logo
         ListTile(
           title: Center(child: Image.asset("assets/BookNest.png", height: 30)),
         ),
-
         const Divider(thickness: 1, color: Colors.grey),
-        // Menu Items
         Expanded(
           child: ListView(
             children: [
-              _buildDrawerItem(context, 'Home', '/', currentRoute),
-              _buildDrawerItem(context, 'All Books', '/all-books', currentRoute),
-              _buildDrawerItem(context, 'Forum', '/forum', currentRoute),
-              _buildDrawerItem(context, 'MyBooks', '/my-books', currentRoute),
-
-              // Garis pemisah sebelum FAQ
-              const Divider(thickness: 1, color: Colors.grey),
-
-              // FAQ Item
-              _buildDrawerItem(context, 'FAQ', '/faq', currentRoute),
-              _buildDrawerItem(context, 'Sign In', '/sign-in', currentRoute),
+              _buildDrawerItem(context, 'Sign In', '/sign-in'),
             ],
           ),
         ),
-        // Footer (Copyright Text)
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: Align(
             alignment: Alignment.bottomCenter,
-            child: Text(
-              '© 2025 BookNest',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
+            child: Text('© 2025 BookNest',
+                style: TextStyle(color: Colors.grey, fontSize: 12)),
           ),
         ),
       ],
@@ -79,24 +113,12 @@ Widget buildDrawer(BuildContext context, String currentRoute) {
   );
 }
 
-// Fungsi untuk membuat ListTile dengan focus mode
-Widget _buildDrawerItem(BuildContext context, String title, String route, String currentRoute) {
-  bool isSelected = (route == currentRoute);
-
+Widget _buildDrawerItem(BuildContext context, String title, String route) {
   return ListTile(
-    title: Text(
-      title,
-      style: TextStyle(
-        color: isSelected ? primaryColor : blackColor,
-      ),
-    ),
-    selected: isSelected,
-    selectedTileColor: backgroundColor,
+    title: Text(title, style: const TextStyle(color: blackColor)),
     onTap: () {
       Navigator.pop(context);
-      if (!isSelected) {
-        Navigator.pushReplacementNamed(context, route);
-      }
+      Navigator.pushNamed(context, route);
     },
   );
 }
