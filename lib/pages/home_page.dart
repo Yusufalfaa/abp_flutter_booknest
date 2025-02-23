@@ -96,7 +96,9 @@ Widget buildDrawer(BuildContext context) {
         Expanded(
           child: ListView(
             children: [
+              _buildDrawerItem(context, 'Sign Up', '/sign-up'),
               _buildDrawerItem(context, 'Sign In', '/sign-in'),
+              _buildDrawerItem(context, 'Settings', '/settings'),
             ],
           ),
         ),

@@ -1,3 +1,4 @@
+import 'package:booknest/pages/sign_up_page.dart';
 import 'package:flutter/material.dart';
 import 'pages/home_page.dart';
 import 'pages/all_books_page.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "BookNest",
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: backgroundColor,
       ),
@@ -45,6 +47,9 @@ class MyApp extends StatelessWidget {
             break;
           case '/sign-in':
             page = const SignInPage();
+            break;
+          case '/sign-up':
+            page = const SignUpPage();
             break;
           case '/':
           default:
