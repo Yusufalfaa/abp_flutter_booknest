@@ -1,12 +1,15 @@
 import 'package:booknest/pages/sign_up_page.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:provider/provider.dart';
+
 import 'pages/home_page.dart';
 import 'pages/all_books_page.dart';
 import 'pages/forum_page.dart';
 import 'pages/mybooks_page.dart';
 import 'pages/faq_page.dart';
 import 'pages/sign_in_page.dart';
-import 'package:http/http.dart' as http;
 
 // Warna yang digunakan dalam aplikasi
 const Color lightColor = Color(0xFFF1EFE3);
@@ -14,7 +17,11 @@ const Color backgroundColor = Color(0xFFF8F8F8);
 const Color primaryColor = Color(0xFFC76E6F);
 const Color blackColor = Color(0xFF272727);
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../pages/all_books_page.dart';
 import '../pages/forum_page.dart';
 import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
-import 'package:http/http.dart';
+import 'package:booknest/services/auth.dart';
 
 const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
@@ -45,7 +46,7 @@ class _HomePageState extends State<HomePage> {
           icon: Image.asset("assets/BookNest.png", height: 40),
         ),
       ),
-      endDrawer: buildDrawer(context),
+      endDrawer: buildDrawer(context, _openFaqPage), // Perbaikan: Kirim fungsi FAQ ke Drawer
       body: _isFaqPage ? const FaqPage() : _pages[_selectedIndex],
 
       // Bottom Navigation Bar
@@ -71,11 +72,10 @@ class _HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
       ),
 
-
       // Floating Action Button untuk membuka FAQ
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
-        onPressed: _openFaqPage,
+        onPressed: _openFaqPage, // Sekarang hanya pakai _openFaqPage()
         shape: const CircleBorder(),
         child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
       ),
@@ -83,8 +83,9 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// Widget Drawer hanya untuk Sign In
-Widget buildDrawer(BuildContext context) {
+// Widget Drawer yang menyesuaikan dengan status login pengguna
+Widget buildDrawer(BuildContext context, Function openFaq) {
+  final User? user = FirebaseAuth.instance.currentUser;
   return Drawer(
     backgroundColor: backgroundColor,
     child: Column(
@@ -95,10 +96,35 @@ Widget buildDrawer(BuildContext context) {
         const Divider(thickness: 1, color: Colors.grey),
         Expanded(
           child: ListView(
-            children: [
+            children: user == null
+                ? [
+              // Jika BELUM LOGIN, tampilkan Sign Up & Sign In
+              ListTile(
+                title: const Text('FAQ', style: TextStyle(color: blackColor)),
+                onTap: () {
+                  Navigator.pop(context);
+                  openFaq(); // Drawer juga menggunakan _openFaqPage()
+                },
+              ),
               _buildDrawerItem(context, 'Sign Up', '/sign-up'),
               _buildDrawerItem(context, 'Sign In', '/sign-in'),
-              _buildDrawerItem(context, 'Settings', '/settings'),
+            ]
+                : [
+              // Jika SUDAH LOGIN, tampilkan Sign Out & FAQ
+              ListTile(
+                title: const Text('FAQ', style: TextStyle(color: blackColor)),
+                onTap: () {
+                  Navigator.pop(context);
+                  openFaq(); // Sama dengan FAB
+                },
+              ),
+              ListTile(
+                title: const Text('Sign Out', style: TextStyle(color: blackColor)),
+                onTap: () async {
+                  await AuthService().signOut();
+                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                },
+              ),
             ],
           ),
         ),
