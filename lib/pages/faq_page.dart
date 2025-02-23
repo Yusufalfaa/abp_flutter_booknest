@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../main.dart';
+import 'home_page.dart';
 
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
@@ -15,10 +15,10 @@ class FaqPage extends StatelessWidget {
           icon: Image.asset("assets/BookNest.png", height: 40),
         ),
       ),
-      endDrawer: buildDrawer(context, '/faq'), // Sesuaikan route agar ter-highlight di Drawer
+      endDrawer: buildDrawer(context, '/faq'),
       body: const Center(child: Text("This is FAQ Page")),
 
-      // Floating Action Button tetap ada untuk konsistensi
+      // Floating Action Button
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         onPressed: () {
