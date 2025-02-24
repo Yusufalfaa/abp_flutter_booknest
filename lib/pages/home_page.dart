@@ -22,7 +22,7 @@ class _HomePageState extends State<HomePage> {
   bool _isFaqPage = false;
 
   final List<Widget> _pages = [
-    Center(child: Text("Welcome to Home Page")),
+    Center(child: Text("Welcome to Home Page dinda d")),
     const AllBooksPage(),
     const ForumPage(),
     const MyBooksPage(),
