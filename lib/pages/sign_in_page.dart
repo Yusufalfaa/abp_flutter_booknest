@@ -46,6 +46,28 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+
+    final user = await _authService.loginWithGoogle();
+
+    setState(() => _isLoading = false);
+
+    if (user != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login dengan Google Berhasil!')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login dengan Google Gagal!')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,9 +93,24 @@ class _SignInPageState extends State<SignInPage> {
               const SizedBox(height: 20),
               _isLoading
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                onPressed: _signIn,
-                child: const Text("Sign In"),
+                  : Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: _signIn,
+                    child: const Text("Sign In"),
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    icon: Image.asset("assets/google.png", height: 24),
+                    label: const Text("Sign In with Google"),
+                    onPressed: _signInWithGoogle,
+                  ),
+                ],
               ),
               TextButton(
                 onPressed: () {

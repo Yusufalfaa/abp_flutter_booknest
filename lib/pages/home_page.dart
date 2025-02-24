@@ -21,6 +21,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isFaqPage = false;
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      setState(() {
+        _currentUser = user; // Update state ketika ada perubahan login
+      });
+    });
+  }
 
   final List<Widget> _pages = [
     Center(child: Text("Welcome to Home Page")),
@@ -35,6 +46,40 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Logout Alert
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: lightColor,
+          title: const Text("Confirm Logout"),
+          content: const Text("Are you sure you want to log out?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await AuthService().signOut();
+                setState(() {
+                  _currentUser = null; // Update state setelah logout
+                });
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              },
+              child: const Text("Log Out", style: TextStyle(color: primaryColor)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,10 +91,9 @@ class _HomePageState extends State<HomePage> {
           icon: Image.asset("assets/BookNest.png", height: 40),
         ),
       ),
-      endDrawer: buildDrawer(context, _openFaqPage), // Perbaikan: Kirim fungsi FAQ ke Drawer
+      endDrawer: buildDrawer(context, _openFaqPage, _showLogoutDialog, _currentUser),
       body: _isFaqPage ? const FaqPage() : _pages[_selectedIndex],
 
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -72,10 +116,9 @@ class _HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
       ),
 
-      // Floating Action Button untuk membuka FAQ
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
-        onPressed: _openFaqPage, // Sekarang hanya pakai _openFaqPage()
+        onPressed: _openFaqPage,
         shape: const CircleBorder(),
         child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
       ),
@@ -84,8 +127,7 @@ class _HomePageState extends State<HomePage> {
 }
 
 // Widget Drawer yang menyesuaikan dengan status login pengguna
-Widget buildDrawer(BuildContext context, Function openFaq) {
-  final User? user = FirebaseAuth.instance.currentUser;
+Widget buildDrawer(BuildContext context, Function openFaq, Function showLogoutDialog, User? currentUser) {
   return Drawer(
     backgroundColor: backgroundColor,
     child: Column(
@@ -96,33 +138,30 @@ Widget buildDrawer(BuildContext context, Function openFaq) {
         const Divider(thickness: 1, color: Colors.grey),
         Expanded(
           child: ListView(
-            children: user == null
+            children: currentUser == null
                 ? [
-              // Jika BELUM LOGIN, tampilkan Sign Up & Sign In
               ListTile(
                 title: const Text('FAQ', style: TextStyle(color: blackColor)),
                 onTap: () {
                   Navigator.pop(context);
-                  openFaq(); // Drawer juga menggunakan _openFaqPage()
+                  openFaq();
                 },
               ),
               _buildDrawerItem(context, 'Sign Up', '/sign-up'),
               _buildDrawerItem(context, 'Sign In', '/sign-in'),
             ]
                 : [
-              // Jika SUDAH LOGIN, tampilkan Sign Out & FAQ
               ListTile(
                 title: const Text('FAQ', style: TextStyle(color: blackColor)),
                 onTap: () {
                   Navigator.pop(context);
-                  openFaq(); // Sama dengan FAB
+                  openFaq();
                 },
               ),
               ListTile(
                 title: const Text('Sign Out', style: TextStyle(color: blackColor)),
-                onTap: () async {
-                  await AuthService().signOut();
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                onTap: () {
+                  showLogoutDialog(context);
                 },
               ),
             ],
