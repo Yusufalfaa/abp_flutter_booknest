@@ -9,7 +9,7 @@ class SignUpPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: backgroundColor,
+        backgroundColor: lightColor,
       ),
 
       body: const Center(child: Text("This is Sign Up Page")),
