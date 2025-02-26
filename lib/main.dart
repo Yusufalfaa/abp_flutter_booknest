@@ -10,6 +10,7 @@ import 'pages/forum_page.dart';
 import 'pages/mybooks_page.dart';
 import 'pages/faq_page.dart';
 import 'pages/sign_in_page.dart';
+import 'pages/book_detail_page.dart';
 
 // Warna yang digunakan dalam aplikasi
 const Color lightColor = Color(0xFFF1EFE3);
@@ -58,6 +59,8 @@ class MyApp extends StatelessWidget {
           case '/sign-up':
             page = const SignUpPage();
             break;
+          case '/bookdetail':
+            page = const BookDetailPage();
           case '/':
           default:
             page = const HomePage();
