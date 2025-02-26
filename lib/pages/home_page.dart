@@ -119,14 +119,14 @@ class _HomePageState extends State<HomePage> {
       children: [
         const SizedBox(height: 10),
         SizedBox(
-          height: 150, // Sesuai dengan desain
+          height: 150,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: 3,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             itemBuilder: (context, index) {
               return Container(
-                width: MediaQuery.of(context).size.width * 0.8, // 80% dari layar
+                width: MediaQuery.of(context).size.width * 0.8,
                 margin: const EdgeInsets.only(right: 12),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -136,7 +136,7 @@ class _HomePageState extends State<HomePage> {
                     BoxShadow(
                       color: Colors.black.withOpacity(0.15),
                       blurRadius: 8,
-                      offset: const Offset(0, 4), // Drop shadow ke bawah
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
