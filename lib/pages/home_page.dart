@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../pages/all_books_page.dart';
 import '../pages/forum_page.dart';
 import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
-import 'package:http/http.dart';
+import 'package:booknest/services/auth.dart';
 
 const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
@@ -20,6 +21,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isFaqPage = false;
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      setState(() {
+        _currentUser = user; // Update state ketika ada perubahan login
+      });
+    });
+  }
 
   final List<Widget> _pages = [
     Center(child: Text("Welcome to Home Page")),
@@ -34,6 +46,45 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Logout Alert
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: lightColor,
+          title: const Text("Confirm Logout"),
+          content: const Text("Are you sure you want to log out?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await AuthService().signOut();
+                setState(() {
+                  _currentUser = null; // Update state setelah logout
+                });
+                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+
+                // Show a SnackBar notification upon successful logout
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('You have successfully logged out!')),
+                );
+              },
+              child: const Text("Log Out", style: TextStyle(color: primaryColor)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,10 +93,9 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: lightColor,
         title: Image.asset("assets/BookNest.png", height: 40),
       ),
-      endDrawer: buildDrawer(context),
+      endDrawer: buildDrawer(context, _openFaqPage, _showLogoutDialog, _currentUser),
       body: _isFaqPage ? const FaqPage() : _pages[_selectedIndex],
 
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -68,8 +118,6 @@ class _HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
       ),
 
-
-      // Floating Action Button untuk membuka FAQ
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         onPressed: _openFaqPage,
@@ -80,8 +128,8 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// Widget Drawer hanya untuk Sign In
-Widget buildDrawer(BuildContext context) {
+// Widget Drawer yang menyesuaikan dengan status login pengguna
+Widget buildDrawer(BuildContext context, Function openFaq, Function showLogoutDialog, User? currentUser) {
   return Drawer(
     backgroundColor: backgroundColor,
     child: Column(
@@ -92,9 +140,18 @@ Widget buildDrawer(BuildContext context) {
         const Divider(thickness: 1, color: Colors.grey),
         Expanded(
           child: ListView(
-            children: [
-              _buildDrawerItem(context, 'Sign Up', '/sign-up'),
+            children: currentUser == null
+                ? [
               _buildDrawerItem(context, 'Sign In', '/sign-in'),
+              _buildDrawerItem(context, 'Settings', '/settings'),
+            ]
+                : [
+              ListTile(
+                title: const Text('Log Out', style: TextStyle(color: blackColor)),
+                onTap: () {
+                  showLogoutDialog(context);
+                },
+              ),
               _buildDrawerItem(context, 'Settings', '/settings'),
             ],
           ),
