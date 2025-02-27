@@ -137,30 +137,17 @@ Widget buildDrawer(BuildContext context, Function openFaq, Function showLogoutDi
           child: ListView(
             children: currentUser == null
                 ? [
-              ListTile(
-                title: const Text('FAQ', style: TextStyle(color: blackColor)),
-                onTap: () {
-                  Navigator.pop(context);
-                  openFaq();
-                },
-              ),
-              _buildDrawerItem(context, 'Sign Up', '/sign-up'),
               _buildDrawerItem(context, 'Sign In', '/sign-in'),
+              _buildDrawerItem(context, 'Settings', '/settings'),
             ]
                 : [
-              ListTile(
-                title: const Text('FAQ', style: TextStyle(color: blackColor)),
-                onTap: () {
-                  Navigator.pop(context);
-                  openFaq();
-                },
-              ),
               ListTile(
                 title: const Text('Sign Out', style: TextStyle(color: blackColor)),
                 onTap: () {
                   showLogoutDialog(context);
                 },
               ),
+              _buildDrawerItem(context, 'Settings', '/settings'),
             ],
           ),
         ),

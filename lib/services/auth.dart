@@ -1,4 +1,3 @@
-// services/auth_service.dart
 import 'package:booknest/models/user.dart' as model;
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';

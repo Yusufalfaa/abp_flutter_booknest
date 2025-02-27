@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:booknest/pages/home_page.dart';
 import 'package:booknest/pages/sign_up_page.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:booknest/services/auth.dart'; // Import AuthService
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -13,6 +14,7 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+  final AuthService _authService = AuthService(); // Initialize AuthService
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final _formKey = GlobalKey<FormState>();
@@ -20,13 +22,19 @@ class _SignInPageState extends State<SignInPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  bool _isPasswordObscured = true; // To hide the password by default
+  bool _isPasswordObscured = true;
   bool _isLoading = false;
   String _statusMessage = ''; // For displaying success/error messages
 
-  // Sign In Function
+  // Sign In Function using email and password
   Future<void> _signIn() async {
-    if (_formKey.currentState!.validate()) {
+    print("Sign In button pressed"); // Debug print for button press
+    if (_emailController.text.trim().isEmpty || _passwordController.text.isEmpty) {
+      print("Email or Password is empty");
+      return;
+    }
+
+    if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
         _statusMessage = ''; // Clear previous messages
@@ -48,25 +56,34 @@ class _SignInPageState extends State<SignInPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(_statusMessage)),
           );
+          print("User successfully logged in: ${user.email}"); // Debug print
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomePage()),
           );
+        } else {
+          print("Login failed: User is null"); // Debug print
+          setState(() {
+            _isLoading = false;
+          });
         }
       } on FirebaseAuthException catch (e) {
         setState(() {
           _isLoading = false;
         });
-
+        print("Login failed with error: ${e.message}"); // Debug print
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login Gagal! Error: ${e.message}')),
         );
       }
+    } else {
+      print("Form is not valid or currentState is null"); // Debug print if form is not valid
     }
   }
 
   // Google Sign In Function
   Future<void> _signInWithGoogle() async {
+    print("Sign In with Google button pressed"); // Debug print for button press
     setState(() {
       _isLoading = true;
     });
@@ -82,6 +99,7 @@ class _SignInPageState extends State<SignInPage> {
         setState(() {
           _isLoading = false;
         });
+        print("Google Sign-In canceled"); // Debug print
         return;
       }
 
@@ -103,6 +121,7 @@ class _SignInPageState extends State<SignInPage> {
           _isLoading = false;
           _statusMessage = 'Login Berhasil dengan Google!';
         });
+        print("Google Sign-In successful: ${user.email}"); // Debug print
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_statusMessage)),
         );
@@ -110,12 +129,17 @@ class _SignInPageState extends State<SignInPage> {
           context,
           MaterialPageRoute(builder: (context) => const HomePage()),
         );
+      } else {
+        print("Google Sign-In failed: User is null"); // Debug print
+        setState(() {
+          _isLoading = false;
+        });
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
-
+      print("Google Sign-In failed with error: $e"); // Debug print
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login dengan Google Gagal! Error: $e')),
       );
@@ -157,70 +181,101 @@ class _SignInPageState extends State<SignInPage> {
                       ),
                       const SizedBox(height: 40),
 
+                      // Email Label
+                      Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Text(
+                          "Email",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       // Email TextField
-                      Text(
-                        'Email',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      TextField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          suffixIcon: Icon(Icons.email),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          fillColor: Color(0xFFE8E8E8),
-                          filled: true,
-                          hintText: 'Email',
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Password TextField
-                      Text(
-                        'Password',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _isPasswordObscured,
-                        decoration: InputDecoration(
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _isPasswordObscured
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                      Form(
+                        key: _formKey,  // Use the form key here
+                        child: Column(
+                          children: [
+                            // Email TextField
+                            TextFormField(
+                              controller: _emailController,
+                              decoration: InputDecoration(
+                                suffixIcon: Icon(Icons.email),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                fillColor: Color(0xFFE8E8E8),
+                                filled: true,
+                                hintText: 'Email',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                return null;
+                              },
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _isPasswordObscured = !_isPasswordObscured;
-                              });
-                            },
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: Colors.grey),
-                          ),
-                          fillColor: Color(0xFFE8E8E8),
-                          filled: true,
-                          hintText: 'Password',
+                            const SizedBox(height: 20),
+
+
+                            // Password Label
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Text(
+                                  "Password",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            // Password TextField
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: _isPasswordObscured,
+                              decoration: InputDecoration(
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordObscured
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordObscured = !_isPasswordObscured;
+                                    });
+                                  },
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(color: Colors.grey),
+                                ),
+                                fillColor: Color(0xFFE8E8E8),
+                                filled: true,
+                                hintText: 'Password',
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your password';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -230,7 +285,7 @@ class _SignInPageState extends State<SignInPage> {
                         alignment: Alignment.centerRight,
                         child: GestureDetector(
                           onTap: () {
-                            print("Forgot Password diklik!");
+                            print("Forgot Password clicked!");
                           },
                           child: Text(
                             'Forgot Password?',
@@ -245,7 +300,9 @@ class _SignInPageState extends State<SignInPage> {
                       const SizedBox(height: 40),
 
                       // Sign In Button
-                      SizedBox(
+                      _isLoading
+                          ? const CircularProgressIndicator()
+                          : SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: _signIn,
