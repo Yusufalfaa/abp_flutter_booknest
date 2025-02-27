@@ -40,10 +40,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: lightColor,
-        title: IconButton(
-          onPressed: () => Navigator.pushReplacementNamed(context, '/'),
-          icon: Image.asset("assets/BookNest.png", height: 40),
-        ),
+        title: Image.asset("assets/BookNest.png", height: 40),
       ),
       endDrawer: buildDrawer(context),
       body: _isFaqPage ? const FaqPage() : _pages[_selectedIndex],
