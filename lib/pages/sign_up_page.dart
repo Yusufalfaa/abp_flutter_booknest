@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:booknest/services/auth.dart';
-import 'sign_in_page.dart';
+import 'package:booknest/pages/sign_in_page.dart';
+import 'package:booknest/pages/home_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -10,7 +11,6 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _usernameController = TextEditingController();
@@ -20,124 +20,300 @@ class _SignUpPageState extends State<SignUpPage> {
 
   bool _isLoading = false;
 
+  String _statusMessage = ''; // For displaying success/error messages
+
+  // Sign Up Function
   Future<void> _signUp() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      setState(() {
+        _isLoading = true;
+        _statusMessage = ''; // Clear previous messages
+      });
 
-      final user = await _authService.signUp(
-        firstName: "",
-        lastName: "",
-        username: _usernameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        passwordConfirmation: _confirmPasswordController.text,
-      );
-
-      setState(() => _isLoading = false);
-
-      if (user != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registrasi Berhasil!')),
+      try {
+        // Call AuthService to create a user
+        var authService = AuthService();
+        var user = await authService.signUp(
+          username: _usernameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          passwordConfirmation: _confirmPasswordController.text,
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const SignInPage()),
-        );
-      } else {
+
+        if (user != null) {
+          setState(() {
+            _isLoading = false;
+            _statusMessage = 'Registrasi Berhasil!'; // Success message
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(_statusMessage)),
+          );
+
+          // Navigate to Sign In page after successful registration
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const SignInPage()),
+          );
+        }
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Error: $e'; // Display error message
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registrasi Gagal!')),
+          SnackBar(content: Text(_statusMessage)),
         );
       }
-    }
-  }
-
-  Future<void> _signUpWithGoogle() async {
-    setState(() => _isLoading = true);
-
-    final user = await _authService.loginWithGoogle();
-
-    setState(() => _isLoading = false);
-
-    if (user != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi dengan Google Berhasil!')),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const SignInPage()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi dengan Google Gagal!')),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Sign Up")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: "Username"),
-                validator: (value) => value!.isEmpty ? "Masukkan Username" : null,
-              ),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: "Email"),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) => value!.contains("@") ? null : "Masukkan Email yang Valid",
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: "Password"),
-                obscureText: true,
-                validator: (value) => value!.length < 8 ? "Password minimal 8 karakter" : null,
-              ),
-              TextFormField(
-                controller: _confirmPasswordController,
-                decoration: const InputDecoration(labelText: "Konfirmasi Password"),
-                obscureText: true,
-                validator: (value) => value != _passwordController.text ? "Password tidak cocok" : null,
-              ),
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : Column(
+      backgroundColor: lightColor,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ElevatedButton(
-                    onPressed: _signUp,
-                    child: const Text("Sign Up"),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                  const SizedBox(height: 16),
+
+                  Center(
+                    child: Text(
+                      'Sign Up',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    icon: Image.asset("assets/google.png", height: 24),
-                    label: const Text("Sign Up with Google"),
-                    onPressed: _signUpWithGoogle,
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Username, Email, Password, and Password Confirmation fields
+                  _buildTextField('Username', 'Username', _usernameController),
+                  _buildTextField('Email', 'Email', _emailController),
+                  _buildPasswordField('Password', 'Password', _passwordController),
+                  _buildPasswordField('Password Confirmation', 'Confirm Password', _confirmPasswordController),
+
+                  const SizedBox(height: 20),
+
+                  // Status message (Success/Error)
+                  if (_statusMessage.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16.0),
+                      child: Text(
+                        _statusMessage,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: _statusMessage.contains('Berhasil') ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 20),
+
+                  // Sign Up Button
+                  _buildSignUpButton(),
+
+                  const SizedBox(height: 20),
+
+                  // Divider with "OR" text
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          thickness: 1,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        "OR",
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Divider(
+                          thickness: 1,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Sign Up with Google Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          print("Sign Up With Google clicked");
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 15),
+                          backgroundColor: Color(0xFFC8C6BA),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              "assets/google.png",
+                              height: 20,
+                              width: 20,
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              "Sign Up With Google",
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Already have an account? Sign In link
+                  Align(
+                    alignment: Alignment.center,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, "/sign-in");
+                      },
+                      child: Text(
+                        "Already have an account? Sign In",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SignInPage()),
-                  );
-                },
-                child: const Text("Sudah punya akun? Sign In"),
-              ),
-            ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper function to build text fields
+  Widget _buildTextField(String label, String hint, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 5),
+        TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            fillColor: Color(0xFFE8E8E8),
+            filled: true,
+            hintText: hint,
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  // Helper function to build password fields
+  Widget _buildPasswordField(String label, String hint, TextEditingController controller) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 5),
+        TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: InputDecoration(
+            suffixIcon: IconButton(
+              icon: Icon(Icons.visibility_off),
+              onPressed: () {},
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Colors.grey),
+            ),
+            fillColor: Color(0xFFE8E8E8),
+            filled: true,
+            hintText: hint,
+          ),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  // Helper function to build the Sign Up button
+  Widget _buildSignUpButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: ElevatedButton(
+          onPressed: _signUp,
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(vertical: 15),
+            backgroundColor: Color(0xFFC8C6BA),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: Text(
+            "Sign Up",
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.black,
+            ),
           ),
         ),
       ),

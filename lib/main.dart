@@ -17,6 +17,8 @@ const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
 const Color primaryColor = Color(0xFFC76E6F);
 const Color blackColor = Color(0xFF272727);
+const Color greyColor = Color(0xE8E8E8);
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

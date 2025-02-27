@@ -1,3 +1,4 @@
+// services/auth_service.dart
 import 'package:booknest/models/user.dart' as model;
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,8 +14,6 @@ class AuthService {
 
     return model.User(
       uid: user.uid,
-      firstName: userData["firstName"] ?? "",
-      lastName: userData["lastName"] ?? "",
       username: userData["username"] ?? "",
       email: user.email ?? "",
     );
@@ -32,8 +31,6 @@ class AuthService {
 
   // Sign Up (Register)
   Future<model.User?> signUp({
-    required String firstName,
-    required String lastName,
     required String username,
     required String email,
     required String password,
@@ -52,10 +49,8 @@ class AuthService {
       auth.User? user = result.user;
       if (user == null) return null;
 
-      // Simpan data pengguna ke Firestore
+      // Save user data to Firestore
       Map<String, dynamic> userData = {
-        "firstName": firstName,
-        "lastName": lastName,
         "username": username,
         "email": email,
         "uid": user.uid,
@@ -108,7 +103,6 @@ class AuthService {
       return null;
     }
   }
-
 
   // Sign Out (Logout)
   Future<void> signOut() async {
