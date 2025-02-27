@@ -71,6 +71,11 @@ class _HomePageState extends State<HomePage> {
                   _currentUser = null; // Update state setelah logout
                 });
                 Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+
+                // Show a SnackBar notification upon successful logout
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('You have successfully logged out!')),
+                );
               },
               child: const Text("Log Out", style: TextStyle(color: primaryColor)),
             ),
@@ -142,7 +147,7 @@ Widget buildDrawer(BuildContext context, Function openFaq, Function showLogoutDi
             ]
                 : [
               ListTile(
-                title: const Text('Sign Out', style: TextStyle(color: blackColor)),
+                title: const Text('Log Out', style: TextStyle(color: blackColor)),
                 onTap: () {
                   showLogoutDialog(context);
                 },
