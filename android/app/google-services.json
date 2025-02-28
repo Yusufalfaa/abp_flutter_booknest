@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "678465747831-eldp1drau86fbn7qlo8b53nq7fi02oti.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.booknest",
+            "certificate_hash": "54335d327af2c1ddbb96ee7346c2725879bd06a5"
+          }
+        },
+        {
           "client_id": "678465747831-l5qqj8afe35stpcitb02vrattsodma7i.apps.googleusercontent.com",
           "client_type": 3
         }

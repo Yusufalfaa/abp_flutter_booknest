@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:booknest/pages/home_page.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:booknest/services/auth.dart';
+import 'package:booknest/models/user.dart' as model;
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -73,59 +74,40 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
-  // Google Sign In Function
+  // Google Sign In
   Future<void> _signInWithGoogle() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Create a GoogleSignIn instance
-      GoogleSignIn googleSignIn = GoogleSignIn();
-
-      // Attempt to sign in with Google
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      // Attempt to sign in with Google using AuthService
+      final model.User? googleUser = await _authService.signInWithGoogle();
       if (googleUser == null) {
         setState(() {
           _isLoading = false;
         });
+        print('Google sign-in failed: User canceled');
         return;
       }
 
-      // Get the authentication details from the Google account
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      setState(() {
+        _isLoading = false;
+        _statusMessage = 'Login Success!';
+      });
 
-      // Create a new credential for Firebase authentication
-      final AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_statusMessage)),
       );
-
-      // Sign in with the credential
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-
-      User? user = userCredential.user;
-      if (user != null) {
-        setState(() {
-          _isLoading = false;
-          _statusMessage = 'Login Success!';
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_statusMessage)),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
+      print('Google Sign-In failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login Failed! Error: $e')),
       );
@@ -399,7 +381,7 @@ class _SignInPageState extends State<SignInPage> {
                 color: Colors.black.withOpacity(0.5),
                 child: Center(
                   child: CircularProgressIndicator(
-                    color: Colors.brown, // Corrected color usage here
+                    color: Colors.brown,
                   ),
                 ),
               ),

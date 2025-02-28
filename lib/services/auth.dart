@@ -1,4 +1,3 @@
-// services/auth.dart
 import 'package:booknest/models/user.dart' as model;
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -90,7 +89,7 @@ class AuthService {
   }
 
   // Sign In with Google
-  Future<auth.UserCredential?> loginWithGoogle() async {
+  Future<model.User?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return null;
@@ -102,10 +101,46 @@ class AuthService {
         idToken: googleAuth.idToken,
       );
 
-      return await _auth.signInWithCredential(credential);
+      // Sign in with the credential
+      auth.UserCredential userCredential = await _auth.signInWithCredential(credential);
+      auth.User? user = userCredential.user;
+
+      if (user != null) {
+        // Store user data in Firestore if it's the first time login
+        await _createUserInFirestore(user);
+        return _userFromFirebaseUser(user, {
+          "username": user.displayName ?? "Unknown",
+          "email": user.email ?? "Unknown",
+          "uid": user.uid,
+          "createdAt": FieldValue.serverTimestamp(),
+        });
+      }
+
+      return null;
     } catch (e) {
       print("Error during Google sign-in: $e");
       return null;
+    }
+  }
+
+  Future<void> _createUserInFirestore(auth.User user) async {
+    try {
+      // Check if the user already exists in Firestore
+      DocumentSnapshot userDoc = await _firestore.collection("users").doc(user.uid).get();
+      if (!userDoc.exists) {
+        // If the user doesn't exist, create a new document
+        await _firestore.collection("users").doc(user.uid).set({
+          "username": user.displayName ?? "Unknown",
+          "email": user.email ?? "Unknown",
+          "uid": user.uid,
+          "createdAt": FieldValue.serverTimestamp(),
+        });
+        print("User data saved to Firestore.");
+      } else {
+        print("User already exists in Firestore.");
+      }
+    } catch (e) {
+      print("Error while saving user data to Firestore: $e");
     }
   }
 
