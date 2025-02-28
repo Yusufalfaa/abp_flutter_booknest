@@ -81,9 +81,15 @@ class _SignInPageState extends State<SignInPage> {
     });
 
     try {
-      // Attempt to sign in with Google using AuthService
-      final model.User? googleUser = await _authService.signInWithGoogle();
-      if (googleUser == null) {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // Sign out the current Google account to allow choosing an account again
+      await googleSignIn.signOut();
+
+      // Ensure the user can choose an account (this shows the account picker)
+      GoogleSignInAccount? googleAccount = await googleSignIn.signIn();
+
+      if (googleAccount == null) {
         setState(() {
           _isLoading = false;
         });
@@ -91,18 +97,38 @@ class _SignInPageState extends State<SignInPage> {
         return;
       }
 
-      setState(() {
-        _isLoading = false;
-        _statusMessage = 'Login Success!';
-      });
+      // Get the authentication details
+      final GoogleSignInAuthentication googleAuth = await googleAccount.authentication;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_statusMessage)),
+      // Create a new credential for Firebase
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-      );
+
+      // Sign in with Google credentials
+      UserCredential userCredential = await _auth.signInWithCredential(credential);
+
+      User? user = userCredential.user;
+      if (user != null) {
+        setState(() {
+          _isLoading = false;
+          _statusMessage = 'Login Success!';
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_statusMessage)),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -110,6 +136,44 @@ class _SignInPageState extends State<SignInPage> {
       print('Google Sign-In failed: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Login Failed! Error: $e')),
+      );
+    }
+  }
+
+  // Google Sign Out
+  Future<void> _signOutWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _auth.signOut(); // Sign out from Firebase
+
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // Sign out from Google
+      await googleSignIn.signOut();
+
+      setState(() {
+        _isLoading = false;
+        _statusMessage = 'Logged Out Successfully';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_statusMessage)),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const SignInPage()),
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Google Sign-Out failed: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign-Out Failed! Error: $e')),
       );
     }
   }
@@ -294,7 +358,7 @@ class _SignInPageState extends State<SignInPage> {
                               Expanded(
                                 child: Divider(
                                   thickness: 1,
-                                  color: blackColor,
+                                  color: Colors.black,
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -303,14 +367,14 @@ class _SignInPageState extends State<SignInPage> {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: blackColor,
+                                  color: Colors.black,
                                 ),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Divider(
                                   thickness: 1,
-                                  color: blackColor,
+                                  color: Colors.black,
                                 ),
                               ),
                             ],

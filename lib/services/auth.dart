@@ -8,7 +8,8 @@ class AuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Create user obj based on Firebase User
-  model.User? _userFromFirebaseUser(auth.User? user, Map<String, dynamic>? userData) {
+  model.User? _userFromFirebaseUser(auth.User? user,
+      Map<String, dynamic>? userData) {
     if (user == null || userData == null) return null;
 
     return model.User(
@@ -23,7 +24,9 @@ class AuthService {
     return _auth.authStateChanges().asyncMap((auth.User? user) async {
       if (user == null) return null;
 
-      DocumentSnapshot doc = await _firestore.collection("users").doc(user.uid).get();
+      DocumentSnapshot doc = await _firestore.collection("users")
+          .doc(user.uid)
+          .get();
       return _userFromFirebaseUser(user, doc.data() as Map<String, dynamic>?);
     });
   }
@@ -68,7 +71,8 @@ class AuthService {
   }
 
   // Sign In (Login)
-  Future<model.User?> signInWithEmailAndPassword(String email, String password) async {
+  Future<model.User?> signInWithEmailAndPassword(String email,
+      String password) async {
     try {
       // Sign in with Firebase Authentication
       auth.UserCredential result = await _auth.signInWithEmailAndPassword(
@@ -80,7 +84,9 @@ class AuthService {
       if (user == null) return null;
 
       // Retrieve user data from Firestore
-      DocumentSnapshot doc = await _firestore.collection("users").doc(user.uid).get();
+      DocumentSnapshot doc = await _firestore.collection("users")
+          .doc(user.uid)
+          .get();
       return _userFromFirebaseUser(user, doc.data() as Map<String, dynamic>?);
     } catch (e) {
       print("Error during sign in: $e");
@@ -94,7 +100,8 @@ class AuthService {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
       if (googleUser == null) return null;
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth = await googleUser
+          .authentication;
 
       final auth.AuthCredential credential = auth.GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -102,7 +109,8 @@ class AuthService {
       );
 
       // Sign in with the credential
-      auth.UserCredential userCredential = await _auth.signInWithCredential(credential);
+      auth.UserCredential userCredential = await _auth.signInWithCredential(
+          credential);
       auth.User? user = userCredential.user;
 
       if (user != null) {
@@ -123,10 +131,27 @@ class AuthService {
     }
   }
 
+  // Sign Out (Logout)
+  Future<void> signOut() async {
+    try {
+      // Sign out from Firebase Authentication
+      await _auth.signOut();
+
+      // Sign out from Google as well
+      await GoogleSignIn().signOut();
+
+      print("User signed out from both Firebase and Google.");
+    } catch (e) {
+      print("Error during sign out: $e");
+    }
+  }
+
+
   Future<void> _createUserInFirestore(auth.User user) async {
     try {
       // Check if the user already exists in Firestore
-      DocumentSnapshot userDoc = await _firestore.collection("users").doc(user.uid).get();
+      DocumentSnapshot userDoc = await _firestore.collection("users").doc(
+          user.uid).get();
       if (!userDoc.exists) {
         // If the user doesn't exist, create a new document
         await _firestore.collection("users").doc(user.uid).set({
@@ -141,15 +166,6 @@ class AuthService {
       }
     } catch (e) {
       print("Error while saving user data to Firestore: $e");
-    }
-  }
-
-  // Sign Out (Logout)
-  Future<void> signOut() async {
-    try {
-      await _auth.signOut();
-    } catch (e) {
-      print("Error during sign out: $e");
     }
   }
 }
