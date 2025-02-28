@@ -10,6 +10,7 @@ const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
 const Color primaryColor = Color(0xFFC76E6F);
 const Color blackColor = Color(0xFF272727);
+const double buttonRadius = 12.0; // Menyamakan radius semua tombol
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -34,10 +35,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   final List<Widget> _pages = [
-    Center(child: Text("Welcome to Home Page")),
+    const Placeholder(),
     const AllBooksPage(),
     const ForumPage(),
     const MyBooksPage(),
+  ];
+
+  final List<String> categories = [
+    "Action", "Fantasy", "Romance", "Comic", "History", "Poetry", "Thriller"
   ];
 
   void _openFaqPage() {
@@ -88,24 +93,27 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: lightColor,
         title: Image.asset("assets/BookNest.png", height: 40),
       ),
-      endDrawer: buildDrawer(context, _openFaqPage, _showLogoutDialog, _currentUser),
-      body: _isFaqPage ? const FaqPage() : _pages[_selectedIndex],
+      endDrawer: _buildDrawer(context),
+      body: _isFaqPage
+          ? const FaqPage()
+          : (_selectedIndex == 0 ? _buildHomeContent() : _pages[_selectedIndex]),
 
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'All Books'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'MyBooks'),
         ],
-        currentIndex: _isFaqPage ? _selectedIndex : _selectedIndex,
+        currentIndex: _selectedIndex,
         backgroundColor: lightColor,
-        selectedItemColor: _isFaqPage ? blackColor : primaryColor,
+        selectedItemColor: primaryColor,
         unselectedItemColor: blackColor,
         selectedFontSize: 14,
         unselectedFontSize: 14,
@@ -126,58 +134,200 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
 
-// Widget Drawer yang menyesuaikan dengan status login pengguna
-Widget buildDrawer(BuildContext context, Function openFaq, Function showLogoutDialog, User? currentUser) {
-  return Drawer(
-    backgroundColor: backgroundColor,
-    child: Column(
-      children: [
-        ListTile(
-          title: Center(child: Image.asset("assets/BookNest.png", height: 30)),
-        ),
-        const Divider(thickness: 1, color: Colors.grey),
-        Expanded(
-          child: ListView(
-            children: currentUser == null
-                ? [
-              _buildDrawerItem(context, 'Sign In', '/sign-in', Icons.login),
-              _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
-            ]
-                : [
-              _buildDrawerItem(context, 'Profile', '/profile', Icons.person),
-              ListTile(
-                title: const Text('Log Out', style: TextStyle(color: blackColor)),
-                leading: Icon(Icons.login, color: blackColor),
-                onTap: () {
-                  showLogoutDialog(context);
-                },
+  // Home Page Content
+  Widget _buildHomeContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 150,
+            decoration: BoxDecoration(
+              image: const DecorationImage(
+                image: AssetImage("assets/bgDarker.png"),
+                fit: BoxFit.cover,
               ),
-              _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
-            ],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              "Find and rate your best book",
+              style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: Text('© 2025 BookNest',
-                style: TextStyle(color: Colors.grey, fontSize: 12)),
+          const SizedBox(height: 20),
+          const Text("We sorted the best for you", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          _buildBookRecommendation(),
+          ...categories.map((category) => _buildCategorySection(category)).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookRecommendation() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 150,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: 3,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemBuilder: (context, index) {
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(buttonRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 110,
+                      color: Colors.grey[400],
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/imagetes1.jpg',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "Just to put it out there, I'll admit straight off the bat that I'm one of the people who enjoyed this book.",
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(buttonRadius)),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            ),
+                            onPressed: () {},
+                            child: const Text("Add to List", style: TextStyle(fontSize: 12, color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildDrawerItem(BuildContext context, String title, String route, IconData icon) {
-  return ListTile(
-    title: Text(title, style: const TextStyle(color: blackColor)),
-    leading: Icon(icon, color: blackColor),
-    onTap: () {
-      Navigator.pop(context);
-      Navigator.pushNamed(context, route);
-    },
-  );
+  Widget _buildCategorySection(String title) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(buttonRadius),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+                onPressed: () {},
+                child: const Text("View All", style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 140,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: 6,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemBuilder: (context, index) {
+              return Container(
+                width: 100,
+                margin: const EdgeInsets.only(right: 10),
+                color: Colors.grey,
+                alignment: Alignment.center,
+                child: Image.asset(
+                  'assets/imagetes1.jpg',
+                  fit: BoxFit.cover,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: backgroundColor,
+      child: Column(
+        children: [
+          ListTile(
+            title: Center(child: Image.asset("assets/BookNest.png", height: 30)),
+          ),
+          const Divider(thickness: 1, color: Colors.grey),
+          Expanded(
+            child: ListView(
+              children: _currentUser == null
+                  ? [
+                _buildDrawerItem(context, 'Sign In', '/sign-in', Icons.login),
+                _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
+              ]
+                  : [
+                _buildDrawerItem(context, 'Profile', '/profile', Icons.person),
+                ListTile(
+                  title: const Text('Log Out', style: TextStyle(color: blackColor)),
+                  leading: Icon(Icons.login, color: blackColor),
+                  onTap: () {
+                    _showLogoutDialog(context);
+                  },
+                ),
+                _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(BuildContext context, String title, String route, IconData icon) {
+    return ListTile(
+      title: Text(title, style: const TextStyle(color: blackColor)),
+      leading: Icon(icon, color: blackColor),
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, route);
+      },
+    );
+  }
 }

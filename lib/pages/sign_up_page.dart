@@ -50,7 +50,7 @@ class _SignUpPageState extends State<SignUpPage> {
           if (result == 'success') {
             setState(() {
               _isLoading = false;
-              _statusMessage = 'Register Berhasil!';
+              _statusMessage = 'Sign Up Successful!';
             });
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +65,7 @@ class _SignUpPageState extends State<SignUpPage> {
           } else {
             setState(() {
               _isLoading = false;
-              _statusMessage = 'Register Gagal: User could not be saved to Firestore';
+              _statusMessage = 'Sign Up Failed: User could not be saved to Database';
             });
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -76,7 +76,7 @@ class _SignUpPageState extends State<SignUpPage> {
       } catch (e) {
         setState(() {
           _isLoading = false;
-          _statusMessage = 'Register Gagal: $e';
+          _statusMessage = 'Sign Up Failed!: $e';
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,7 +162,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
-                                  color: _statusMessage.contains('Berhasil') ? Colors.green : Colors.red,
+                                  color: _statusMessage.contains('Success') ? Colors.green : Colors.red,
                                 ),
                               ),
                             ),

@@ -48,7 +48,7 @@ class _SignInPageState extends State<SignInPage> {
         if (user != null) {
           setState(() {
             _isLoading = false;
-            _statusMessage = 'Login Berhasil!';
+            _statusMessage = 'Login Success!';
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(_statusMessage)),
@@ -67,7 +67,7 @@ class _SignInPageState extends State<SignInPage> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login Gagal! Error: ${e.message}')),
+          SnackBar(content: Text('Login Failed! Error: ${e.message}')),
         );
       }
     }
@@ -108,7 +108,7 @@ class _SignInPageState extends State<SignInPage> {
       if (user != null) {
         setState(() {
           _isLoading = false;
-          _statusMessage = 'Login Berhasil dengan Google!';
+          _statusMessage = 'Login Success!';
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_statusMessage)),
@@ -127,7 +127,7 @@ class _SignInPageState extends State<SignInPage> {
         _isLoading = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login dengan Google Gagal! Error: $e')),
+        SnackBar(content: Text('Login Failed! Error: $e')),
       );
     }
   }
