@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:booknest/services/auth.dart';
+import 'package:booknest/services/database.dart';
 import 'package:booknest/pages/sign_in_page.dart';
 import 'package:booknest/pages/home_page.dart';
+import 'package:booknest/models/user.dart' as model;
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -19,8 +21,8 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
-  String _statusMessage = ''; // For displaying success/error messages
-  bool _isPasswordObscured = true; // For password visibility toggle
+  String _statusMessage = '';
+  bool _isPasswordObscured = true;
 
   // Sign Up Function
   Future<void> _signUp() async {
@@ -40,29 +42,41 @@ class _SignUpPageState extends State<SignUpPage> {
           passwordConfirmation: _confirmPasswordController.text,
         );
 
-        // Simulate a very short delay to show loading for 0.5 seconds
-        await Future.delayed(Duration(milliseconds: 500));
-
         if (user != null) {
-          setState(() {
-            _isLoading = false;
-            _statusMessage = 'Register Berhasil!'; // Success message
-          });
+          // Store additional user data in Firestore
+          var dbService = DatabaseService();
+          String result = await dbService.createUser(user);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_statusMessage)),
-          );
+          if (result == 'success') {
+            setState(() {
+              _isLoading = false;
+              _statusMessage = 'Register Berhasil!';
+            });
 
-          // Navigate to Sign In page after successful registration
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const SignInPage()),
-          );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(_statusMessage)),
+            );
+
+            // Navigate to Sign In page after successful registration
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const SignInPage()),
+            );
+          } else {
+            setState(() {
+              _isLoading = false;
+              _statusMessage = 'Register Gagal: User could not be saved to Firestore';
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(_statusMessage)),
+            );
+          }
         }
       } catch (e) {
         setState(() {
           _isLoading = false;
-          _statusMessage = 'Register Gagal: $e'; // Display error message
+          _statusMessage = 'Register Gagal: $e';
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -71,6 +85,7 @@ class _SignUpPageState extends State<SignUpPage> {
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

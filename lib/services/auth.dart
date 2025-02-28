@@ -1,3 +1,4 @@
+// services/auth.dart
 import 'package:booknest/models/user.dart' as model;
 import 'package:firebase_auth/firebase_auth.dart' as auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -40,6 +41,7 @@ class AuthService {
         throw Exception("Passwords do not match!");
       }
 
+      // Create user in Firebase Authentication
       auth.UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -58,6 +60,7 @@ class AuthService {
 
       await _firestore.collection("users").doc(user.uid).set(userData);
 
+      // Combine data from Firebase Authentication and Firestore
       return _userFromFirebaseUser(user, userData);
     } catch (e) {
       print("Error during sign up: $e");
@@ -68,6 +71,7 @@ class AuthService {
   // Sign In (Login)
   Future<model.User?> signInWithEmailAndPassword(String email, String password) async {
     try {
+      // Sign in with Firebase Authentication
       auth.UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -76,6 +80,7 @@ class AuthService {
       auth.User? user = result.user;
       if (user == null) return null;
 
+      // Retrieve user data from Firestore
       DocumentSnapshot doc = await _firestore.collection("users").doc(user.uid).get();
       return _userFromFirebaseUser(user, doc.data() as Map<String, dynamic>?);
     } catch (e) {
@@ -84,7 +89,7 @@ class AuthService {
     }
   }
 
-  // Sign In (Google)
+  // Sign In with Google
   Future<auth.UserCredential?> loginWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -99,6 +104,7 @@ class AuthService {
 
       return await _auth.signInWithCredential(credential);
     } catch (e) {
+      print("Error during Google sign-in: $e");
       return null;
     }
   }
