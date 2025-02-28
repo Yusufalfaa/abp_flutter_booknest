@@ -28,7 +28,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       setState(() {
-        _currentUser = user; // Update state ketika ada perubahan login
+        _currentUser = user;
       });
     });
   }
@@ -142,17 +142,19 @@ Widget buildDrawer(BuildContext context, Function openFaq, Function showLogoutDi
           child: ListView(
             children: currentUser == null
                 ? [
-              _buildDrawerItem(context, 'Sign In', '/sign-in'),
-              _buildDrawerItem(context, 'Settings', '/settings'),
+              _buildDrawerItem(context, 'Sign In', '/sign-in', Icons.login),
+              _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
             ]
                 : [
+              _buildDrawerItem(context, 'Profile', '/profile', Icons.person),
               ListTile(
                 title: const Text('Log Out', style: TextStyle(color: blackColor)),
+                leading: Icon(Icons.login, color: blackColor),
                 onTap: () {
                   showLogoutDialog(context);
                 },
               ),
-              _buildDrawerItem(context, 'Settings', '/settings'),
+              _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
             ],
           ),
         ),
@@ -169,9 +171,10 @@ Widget buildDrawer(BuildContext context, Function openFaq, Function showLogoutDi
   );
 }
 
-Widget _buildDrawerItem(BuildContext context, String title, String route) {
+Widget _buildDrawerItem(BuildContext context, String title, String route, IconData icon) {
   return ListTile(
     title: Text(title, style: const TextStyle(color: blackColor)),
+    leading: Icon(icon, color: blackColor),
     onTap: () {
       Navigator.pop(context);
       Navigator.pushNamed(context, route);
