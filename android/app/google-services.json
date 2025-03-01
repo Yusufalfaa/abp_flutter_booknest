@@ -14,19 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "678465747831-aqa0iv2u9e4b6897151rvtr4486b5n7j.apps.googleusercontent.com",
+          "client_id": "678465747831-nqh41vrk0s0f9h2cvf9pv9emmma9ld8p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.booknest",
-            "certificate_hash": "55e183c0d22892f4ef6d12d93f0c5fe61fdfad89"
-          }
-        },
-        {
-          "client_id": "678465747831-eldp1drau86fbn7qlo8b53nq7fi02oti.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.booknest",
-            "certificate_hash": "54335d327af2c1ddbb96ee7346c2725879bd06a5"
+            "certificate_hash": "d522cad10d2f1f7942afc8dd32d3b4fdafe3acc2"
           }
         },
         {
