@@ -5,6 +5,7 @@ import '../pages/forum_page.dart';
 import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
 import 'package:booknest/services/auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
@@ -42,7 +43,13 @@ class _HomePageState extends State<HomePage> {
   ];
 
   final List<String> categories = [
-    "Action", "Fantasy", "Romance", "Comic", "History", "Poetry", "Thriller"
+    "Fiction",
+    "Fantasy",
+    "Drama",
+    "Philosophy",
+    "History",
+    "Poetry",
+    "Science",
   ];
 
   void _openFaqPage() {
@@ -75,14 +82,21 @@ class _HomePageState extends State<HomePage> {
                 setState(() {
                   _currentUser = null; // Update state setelah logout
                 });
-                Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
 
                 // Show a SnackBar notification upon successful logout
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('You have successfully logged out!')),
                 );
               },
-              child: const Text("Log Out", style: TextStyle(color: primaryColor)),
+              child: const Text(
+                "Log Out",
+                style: TextStyle(color: primaryColor),
+              ),
             ),
           ],
         );
@@ -100,14 +114,20 @@ class _HomePageState extends State<HomePage> {
         title: Image.asset("assets/BookNest.png", height: 40),
       ),
       endDrawer: _buildDrawer(context),
-      body: _isFaqPage
-          ? const FaqPage()
-          : (_selectedIndex == 0 ? _buildHomeContent() : _pages[_selectedIndex]),
+      body:
+          _isFaqPage
+              ? const FaqPage()
+              : (_selectedIndex == 0
+                  ? _buildHomeContent()
+                  : _pages[_selectedIndex]),
 
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'All Books'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.library_books),
+            label: 'All Books',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'MyBooks'),
         ],
@@ -130,7 +150,10 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: primaryColor,
         onPressed: _openFaqPage,
         shape: const CircleBorder(),
-        child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
+        child: const Text(
+          '?',
+          style: TextStyle(fontSize: 24, color: Colors.white),
+        ),
       ),
     );
   }
@@ -154,30 +177,51 @@ class _HomePageState extends State<HomePage> {
             alignment: Alignment.center,
             child: const Text(
               "Find and rate your best book",
-              style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 20),
-          const Text("We sorted the best for you", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text(
+            "We sorted the best for you",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           _buildBookRecommendation(),
-          ...categories.map((category) => _buildCategorySection(category)).toList(),
+          ...categories
+              .map((category) => _buildCategorySection(category))
+              .toList(),
         ],
       ),
     );
   }
 
   Widget _buildBookRecommendation() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 10),
-        SizedBox(
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('books').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        var books = snapshot.data!.docs;
+        int maxRecommendations = 8;
+        int itemCount =
+            books.length > maxRecommendations
+                ? maxRecommendations
+                : books.length;
+
+        return SizedBox(
           height: 150,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: 3,
+            itemCount: itemCount,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             itemBuilder: (context, index) {
+              var book = books[index].data() as Map<String, dynamic>;
+
               return Container(
                 width: MediaQuery.of(context).size.width * 0.8,
                 margin: const EdgeInsets.only(right: 12),
@@ -198,11 +242,12 @@ class _HomePageState extends State<HomePage> {
                     Container(
                       width: 80,
                       height: 110,
-                      color: Colors.grey[400],
-                      alignment: Alignment.center,
-                      child: Image.asset(
-                        'assets/imagetes1.jpg',
-                        fit: BoxFit.cover,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(book['thumbnail'] ?? ''),
+                          fit: BoxFit.cover,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -211,19 +256,44 @@ class _HomePageState extends State<HomePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            "Just to put it out there, I'll admit straight off the bat that I'm one of the people who enjoyed this book.",
-                            maxLines: 3,
+                          Text(
+                            book['title'] ?? 'No Title',
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            book['description'] != null &&
+                                    book['description'].length > 50
+                                ? '${book['description'].substring(0, 50)} ...'
+                                : (book['description'] ??
+                                    'Unknown Description'),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryColor,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(buttonRadius)),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  buttonRadius,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
                             ),
                             onPressed: () {},
-                            child: const Text("Add to List", style: TextStyle(fontSize: 12, color: Colors.white)),
+                            child: const Text(
+                              "Add to List",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -233,54 +303,84 @@ class _HomePageState extends State<HomePage> {
               );
             },
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildCategorySection(String title) {
+  Widget _buildCategorySection(String category) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(buttonRadius),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-                onPressed: () {},
-                child: const Text("View All", style: TextStyle(color: Colors.white)),
-              ),
-            ],
+          child: Text(
+            category,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
-        SizedBox(
-          height: 140,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 6,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            itemBuilder: (context, index) {
-              return Container(
-                width: 100,
-                margin: const EdgeInsets.only(right: 10),
-                color: Colors.grey,
-                alignment: Alignment.center,
-                child: Image.asset(
-                  'assets/imagetes1.jpg',
-                  fit: BoxFit.cover,
-                ),
-              );
-            },
-          ),
+        StreamBuilder<QuerySnapshot>(
+          stream:
+              FirebaseFirestore.instance
+                  .collection('books')
+                  .where('categories', isEqualTo: category)
+                  .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            var books = snapshot.data!.docs;
+            int maxBooks = 10;
+            int itemCount = books.length > maxBooks ? maxBooks : books.length;
+
+            return SizedBox(
+              height: 140,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: itemCount + 1, // +1 for the "View All" button
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                itemBuilder: (context, index) {
+                  if (index < itemCount) {
+                    var book = books[index].data() as Map<String, dynamic>;
+
+                    return Container(
+                      width: 100,
+                      margin: const EdgeInsets.only(right: 10),
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(book['thumbnail'] ?? ''),
+                          fit: BoxFit.cover,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    );
+                  } else {
+                    return SizedBox(
+                      width: 100,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(buttonRadius),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        onPressed: () {},
+                        child: const Text(
+                          "View All",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            );
+          },
         ),
       ],
     );
@@ -292,27 +392,53 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         children: [
           ListTile(
-            title: Center(child: Image.asset("assets/BookNest.png", height: 30)),
+            title: Center(
+              child: Image.asset("assets/BookNest.png", height: 30),
+            ),
           ),
           const Divider(thickness: 1, color: Colors.grey),
           Expanded(
             child: ListView(
-              children: _currentUser == null
-                  ? [
-                _buildDrawerItem(context, 'Sign In', '/sign-in', Icons.login),
-                _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
-              ]
-                  : [
-                _buildDrawerItem(context, 'Profile', '/profile', Icons.person),
-                ListTile(
-                  title: const Text('Log Out', style: TextStyle(color: blackColor)),
-                  leading: Icon(Icons.login, color: blackColor),
-                  onTap: () {
-                    _showLogoutDialog(context);
-                  },
-                ),
-                _buildDrawerItem(context, 'Settings', '/settings', Icons.settings),
-              ],
+              children:
+                  _currentUser == null
+                      ? [
+                        _buildDrawerItem(
+                          context,
+                          'Sign In',
+                          '/sign-in',
+                          Icons.login,
+                        ),
+                        _buildDrawerItem(
+                          context,
+                          'Settings',
+                          '/settings',
+                          Icons.settings,
+                        ),
+                      ]
+                      : [
+                        _buildDrawerItem(
+                          context,
+                          'Profile',
+                          '/profile',
+                          Icons.person,
+                        ),
+                        ListTile(
+                          title: const Text(
+                            'Log Out',
+                            style: TextStyle(color: blackColor),
+                          ),
+                          leading: Icon(Icons.login, color: blackColor),
+                          onTap: () {
+                            _showLogoutDialog(context);
+                          },
+                        ),
+                        _buildDrawerItem(
+                          context,
+                          'Settings',
+                          '/settings',
+                          Icons.settings,
+                        ),
+                      ],
             ),
           ),
         ],
@@ -320,7 +446,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDrawerItem(BuildContext context, String title, String route, IconData icon) {
+  Widget _buildDrawerItem(
+    BuildContext context,
+    String title,
+    String route,
+    IconData icon,
+  ) {
     return ListTile(
       title: Text(title, style: const TextStyle(color: blackColor)),
       leading: Icon(icon, color: blackColor),

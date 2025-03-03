@@ -12,16 +12,26 @@ db = firestore.client()
 with open("assets/books.json", "r", encoding="utf-8") as file:
     books = json.load(file)
 
-# Upload to Firestore using ISBN-13 as ID
-total_books = len(books)  # Get total books
+# Required fields (modify if needed)
+REQUIRED_FIELDS = ["isbn13", "title", "authors", "categories", "thumbnail", "description"]
+
+total_books = len(books)
+skipped_books = 0
+uploaded_books = 0
+
 print(f"Starting upload of {total_books} books...")
 
 for index, book in enumerate(books, start=1):
-    if "isbn13" in book and book["isbn13"]:  # Ensure ISBN-13 exists
-        doc_ref = db.collection("books").document(str(book["isbn13"]))  # Use ISBN-13 as ID
-        doc_ref.set(book)
-        print(f"✅ Uploaded {index}/{total_books}: {book.get('title', 'Unknown Title')}")
-    else:
-        print(f"⚠️ Skipping book {index}/{total_books} due to missing ISBN-13")
+    # Check if any required field is missing or empty
+    if any(not book.get(field) for field in REQUIRED_FIELDS):
+        print(f"⚠️ Skipping book {index}/{total_books} due to missing required fields.")
+        skipped_books += 1
+        continue
+    
+    # Upload to Firestore
+    doc_ref = db.collection("books").document(str(book["isbn13"]))  # Use ISBN-13 as ID
+    doc_ref.set(book)
+    uploaded_books += 1
+    print(f"✅ Uploaded {index}/{total_books}: {book['title']}")
 
-print("🎉 All books uploaded successfully!")
+print(f"🎉 Upload completed! {uploaded_books} books uploaded, {skipped_books} books skipped.")
