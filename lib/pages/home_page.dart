@@ -4,6 +4,7 @@ import '../pages/all_books_page.dart';
 import '../pages/forum_page.dart';
 import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
+import '../pages/book_detail_page.dart';
 import 'package:booknest/services/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -344,15 +345,25 @@ class _HomePageState extends State<HomePage> {
                   if (index < itemCount) {
                     var book = books[index].data() as Map<String, dynamic>;
 
-                    return Container(
-                      width: 100,
-                      margin: const EdgeInsets.only(right: 10),
-                      decoration: BoxDecoration(
-                        image: DecorationImage(
-                          image: NetworkImage(book['thumbnail'] ?? ''),
-                          fit: BoxFit.cover,
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookDetailsPage(book: book),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 100,
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: NetworkImage(book['thumbnail'] ?? ''),
+                            fit: BoxFit.cover,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        borderRadius: BorderRadius.circular(8),
                       ),
                     );
                   } else {
@@ -369,7 +380,9 @@ class _HomePageState extends State<HomePage> {
                             vertical: 8,
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          // Navigate to a full category page if needed
+                        },
                         child: const Text(
                           "View All",
                           style: TextStyle(color: Colors.white),
