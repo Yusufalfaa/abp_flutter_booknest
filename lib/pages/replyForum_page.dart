@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-
-const Color primaryColor = Color(0xFFC76E6F);
-const Color blackColor = Color(0xFF272727);
-const Color lightGrey = Color(0xFFF5F5F5);
-const double buttonRadius = 12.0;
+import 'home_page.dart';
 
 class ReplyForumPage extends StatefulWidget {
   final Map<String, String> originalPost;
@@ -59,7 +55,8 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
       setState(() {
         _charCount = _replyController.text.length;
         if (_charCount > _maxLength) {
-          _replyController.text = _replyController.text.substring(0, _maxLength);
+          _replyController.text =
+              _replyController.text.substring(0, _maxLength);
           _replyController.selection = TextSelection.fromPosition(
             TextPosition(offset: _replyController.text.length),
           );
@@ -76,7 +73,9 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
   }
 
   void _submitReply() {
-    if (_replyController.text.trim().isNotEmpty && _charCount <= _maxLength) {
+    if (_replyController.text
+        .trim()
+        .isNotEmpty && _charCount <= _maxLength) {
       setState(() {
         replies.add({
           'username': 'CurrentUser', // Username statis untuk demo front-end
@@ -94,11 +93,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Reply to "${widget.originalPost['title']}"',
-          style: const TextStyle(color: blackColor),
-        ),
-        backgroundColor: Colors.white,
+        backgroundColor: lightColor,
         elevation: 1,
         iconTheme: const IconThemeData(color: blackColor),
       ),
@@ -114,6 +109,8 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                 borderRadius: BorderRadius.circular(buttonRadius),
               ),
               margin: EdgeInsets.zero,
+              color: lightColor,
+              // Set the card background color to lightColor
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
@@ -123,7 +120,9 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         CircleAvatar(
-                          backgroundImage: AssetImage(widget.originalPost['avatarPath'] ?? 'assets/profiles/default_avatar.jpg'),
+                          backgroundImage: AssetImage(widget
+                              .originalPost['avatarPath'] ??
+                              'assets/profiles/default_avatar.jpg'),
                           radius: 20,
                         ),
                         SizedBox(width: 8),
@@ -132,13 +131,16 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.originalPost['username'] ?? 'Unknown User',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                widget.originalPost['username'] ??
+                                    'Unknown User',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 14),
                                 softWrap: true,
                               ),
                               Text(
                                 widget.originalPost['date'] ?? 'Unknown Date',
-                                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 12),
                                 softWrap: true,
                               ),
                             ],
@@ -167,11 +169,12 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.all(12),
-                        counterText: '', // Menonaktifkan penghitung bawaan
+                        counterText: '',
                       ),
-                      maxLength: _maxLength, // Batas karakter
+                      maxLength: _maxLength,
                     ),
                     const SizedBox(height: 8),
+
                     // Baris untuk counter dan tombol Post
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -208,17 +211,19 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
-            // Daftar Balasan dengan Jumlah Dinamis
+
             Text(
-              'Replies (${replies.length})', // Menampilkan jumlah balasan secara dinamis
+              'Replies (${replies.length})',
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             if (replies.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(8.0),
-                child: Text('No replies yet.', style: TextStyle(color: Colors.grey)),
+                child: Text(
+                    'No replies yet.', style: TextStyle(color: Colors.grey)),
               )
             else
               Expanded(
@@ -233,6 +238,8 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                         borderRadius: BorderRadius.circular(buttonRadius),
                       ),
                       margin: const EdgeInsets.only(bottom: 8.0),
+                      color: lightColor,
+                      // Set the card background color to lightColor
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
                         child: Row(
@@ -243,25 +250,34 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start,
                                     children: [
                                       CircleAvatar(
-                                        backgroundImage: AssetImage(reply['avatarPath'] ?? 'assets/profiles/default_avatar.jpg'),
+                                        backgroundImage: AssetImage(
+                                            reply['avatarPath'] ??
+                                                'assets/profiles/default_avatar.jpg'),
                                         radius: 20,
                                       ),
                                       SizedBox(width: 8),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment
+                                              .start,
                                           children: [
                                             Text(
-                                              reply['username'] ?? 'Unknown User',
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                              reply['username'] ??
+                                                  'Unknown User',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14),
                                               softWrap: true,
                                             ),
                                             Text(
                                               reply['date'] ?? 'Unknown Date',
-                                              style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                              style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 12),
                                               softWrap: true,
                                             ),
                                           ],

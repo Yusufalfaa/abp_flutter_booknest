@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart'; // Pastikan file ini ada jika digunakan
-import 'newForum_page.dart'; // Pastikan file ini ada
-import 'replyForum_page.dart'; // Pastikan file ini ada
-
-// Definisikan variabel global untuk primaryColor dan buttonRadius
-const Color lightColor = Color(0xFFF1EFE3);
-const Color backgroundColor = Color(0xFFF8F8F8);
-const Color primaryColor = Color(0xFFC76E6F);
-const Color blackColor = Color(0xFF272727);
-const double buttonRadius = 12.0; // Menyamakan radius semua tombol
+import 'home_page.dart';
+import 'newForum_page.dart';
+import 'replyForum_page.dart';
 
 class ForumPage extends StatefulWidget {
   const ForumPage({super.key});
@@ -274,12 +267,12 @@ class ForumPost extends StatelessWidget {
         borderRadius: BorderRadius.circular(buttonRadius),
       ),
       margin: EdgeInsets.zero,
+      color: lightColor,
       child: Padding(
-        padding: const EdgeInsets.all(12.0), // Padding luar card
+        padding: const EdgeInsets.all(12.0),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start, // Align items at the start (top)
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Bagian kiri: Avatar (dengan gambar), username, date, title, content, replies (dalam Flexible untuk mencegah overflow)
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,10 +281,10 @@ class ForumPost extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CircleAvatar(
-                        backgroundImage: AssetImage(avatarPath), // Gunakan path avatar yang diterima
+                        backgroundImage: AssetImage(avatarPath),
                         radius: 20,
                       ),
-                      SizedBox(width: 8), // Jarak antara avatar dan username
+                      SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,35 +292,35 @@ class ForumPost extends StatelessWidget {
                             Text(
                               username,
                               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                              softWrap: true, // Membiarkan teks membungkus ke baris baru
+                              softWrap: true,
                             ),
                             Text(
                               date,
                               style: TextStyle(color: Colors.grey, fontSize: 12),
-                              softWrap: true, // Membiarkan teks membungkus ke baris baru
+                              softWrap: true,
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 8), // Jarak antara username/date dan title
+                  SizedBox(height: 8),
                   Text(
                     title,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    softWrap: true, // Membiarkan teks membungkus ke baris baru
+                    softWrap: true,
                   ),
                   SizedBox(height: 4),
                   Text(
                     content,
                     style: TextStyle(fontSize: 14),
-                    softWrap: true, // Membiarkan teks membungkus ke baris baru
+                    softWrap: true,
                   ),
                   SizedBox(height: 8),
                   GestureDetector(
-                    onTap: onReplyTap, // Klik pada ikon dan teks akan memicu navigasi
+                    onTap: onReplyTap,
                     child: Row(
-                      mainAxisSize: MainAxisSize.min, // Membatasi lebar Row ini
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.chat_bubble_outline, size: 16, color: Colors.grey),
                         SizedBox(width: 4),
@@ -335,7 +328,7 @@ class ForumPost extends StatelessWidget {
                           child: Text(
                             '$replies Reply(s)',
                             style: TextStyle(color: Colors.grey, fontSize: 14),
-                            softWrap: true, // Membiarkan teks membungkus ke baris baru
+                            softWrap: true,
                           ),
                         ),
                       ],

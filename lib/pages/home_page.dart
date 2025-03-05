@@ -10,7 +10,7 @@ const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
 const Color primaryColor = Color(0xFFC76E6F);
 const Color blackColor = Color(0xFF272727);
-const double buttonRadius = 12.0; // Menyamakan radius semua tombol
+const double buttonRadius = 12.0;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -73,7 +73,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(dialogContext);
                 await AuthService().signOut();
                 setState(() {
-                  _currentUser = null; // Update state setelah logout
+                  _currentUser = null;
                 });
                 Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
 
@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
         ],
         currentIndex: _selectedIndex,
         backgroundColor: lightColor,
-        selectedItemColor: primaryColor,
+        selectedItemColor: _isFaqPage? blackColor : primaryColor,
         unselectedItemColor: blackColor,
         selectedFontSize: 14,
         unselectedFontSize: 14,

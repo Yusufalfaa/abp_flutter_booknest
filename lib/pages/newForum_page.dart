@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-// Import warna dan konstanta dari ForumPage
-const Color lightColor = Color(0xFFF1EFE3);
-const Color backgroundColor = Color(0xFFF8F8F8);
-const Color primaryColor = Color(0xFFC76E6F);
-const Color blackColor = Color(0xFF272727);
-const double buttonRadius = 12.0;
+import 'package:booknest/pages/home_page.dart';
 
 class NewForumPage extends StatefulWidget {
   const NewForumPage({super.key});
@@ -46,7 +40,7 @@ class _NewForumPageState extends State<NewForumPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: lightColor,
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: blackColor),
@@ -60,106 +54,110 @@ class _NewForumPageState extends State<NewForumPage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Bagian "Let's Talk" dari ForumPage
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Let's Talk",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  "Sharing, find support, and connect with community",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-
-            // Field Judul (tanpa label "Title")
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Write your forum title here',
-                hintStyle: TextStyle(fontSize: 14),
-                filled: true,
-                fillColor: Colors.grey[200],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(buttonRadius),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            SizedBox(height: 16),
-
-            // Field Konten
-            TextField(
-              controller: _contentController,
-              maxLines: 5,
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(_maxLength), // Tetap sebagai cadangan
-              ],
-              decoration: InputDecoration(
-                hintText: 'Write down your interesting thoughts or theories here',
-                hintStyle: TextStyle(fontSize: 14),
-                filled: true,
-                fillColor: Colors.grey[200],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(buttonRadius),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: EdgeInsets.all(12), // Padding normal
-              ),
-            ),
-            SizedBox(height: 8), // Jarak antara TextField dan elemen di bawah
-
-            // Baris untuk counter dan tombol Post di luar TextField
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end, // Geser ke kanan
-              children: [
-                Text(
-                  '${_contentController.text.length}/$_maxLength',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(width: 8), // Jarak antara counter dan tombol
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+      body: Container(
+        margin: EdgeInsets.all(8.0),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Bagian "Let's Talk" dari ForumPage
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Let's Talk",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
                     ),
-                    minimumSize: Size(100, 30),
-                    padding: EdgeInsets.symmetric(horizontal: 12),
                   ),
-                  onPressed: () {},
-                  child: Text(
-                    'Post',
+                  SizedBox(height: 4),
+                  Text(
+                    "Sharing, find support, and connect with community",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+
+              // Field Judul (tanpa label "Title")
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Write your forum title here',
+                  hintStyle: TextStyle(fontSize: 14),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(buttonRadius),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Field Konten
+              TextField(
+                controller: _contentController,
+                maxLines: 5,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(_maxLength),
+                ],
+                decoration: InputDecoration(
+                  hintText: 'Write down your interesting thoughts or theories here',
+                  hintStyle: TextStyle(fontSize: 14),
+                  filled: true,
+                  fillColor: Colors.grey[200],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(buttonRadius),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.all(12),
+                ),
+              ),
+              SizedBox(height: 8),
+
+              // Baris untuk counter dan tombol Post di luar TextField
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    '${_contentController.text.length}/$_maxLength',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white,
+                      color: Colors.grey[600],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      minimumSize: Size(100, 30),
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    onPressed: () {},
+                    child: Text(
+                      'Post',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
 }
