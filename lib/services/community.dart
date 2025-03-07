@@ -5,32 +5,43 @@ import 'package:booknest/models/reply.dart';
 class CommunityService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Fetch forum posts sorted by replies or date
   Future<List<Forum>> getForumPosts({bool byReplies = true}) async {
     try {
       QuerySnapshot querySnapshot;
 
       if (byReplies) {
-        querySnapshot = await _firestore
+        querySnapshot = await FirebaseFirestore.instance
             .collection('forums')
             .orderBy('replies', descending: true)
+            .limit(10)
             .get();
       } else {
-        querySnapshot = await _firestore
+        querySnapshot = await FirebaseFirestore.instance
             .collection('forums')
             .orderBy('date', descending: true)
+            .limit(10)
             .get();
       }
 
-      // Map Firestore documents to Forum model
+      print("Documents Retrieved: ${querySnapshot.docs.length}");
+
       return querySnapshot.docs.map((doc) {
-        return Forum.fromMap(doc.data() as Map<String, dynamic>);
+        final data = doc.data() as Map<String, dynamic>;
+        print("Forum Data: $data");
+
+        return Forum.fromMap({
+          'id': doc.id, // Pastikan id selalu ada
+          ...data, // Spread semua data dari Firestore
+        });
       }).toList();
     } catch (e) {
       print("Error getting forum posts: $e");
       return [];
     }
   }
+
+
+
 
   // Add a new forum post
   Future<String> createForumPost(Forum forum) async {

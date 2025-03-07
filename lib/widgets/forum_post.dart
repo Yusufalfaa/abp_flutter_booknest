@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class ForumPost extends StatelessWidget {
   final String username;
@@ -19,6 +20,9 @@ class ForumPost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Format date into "07 March 2025"
+    String formattedDate = _formatDate(date);
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -31,7 +35,6 @@ class ForumPost extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar (optional, you can replace with actual user image)
             CircleAvatar(
               backgroundColor: Colors.grey,
               radius: 20,
@@ -41,18 +44,14 @@ class ForumPost extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        username,
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      Spacer(),
-                      Text(
-                        date,
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
+                  Text(
+                    username,
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  SizedBox(height: 0),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -88,5 +87,16 @@ class ForumPost extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Function to format the date to "07 March 2025"
+  String _formatDate(String dateString) {
+    try {
+      DateTime dateTime = DateTime.parse(dateString);
+      return DateFormat('dd MMMM yyyy', 'en_US').format(dateTime); // English format
+    } catch (e) {
+      print('Error formatting date: $e');
+      return dateString; // Return original string if formatting fails
+    }
   }
 }
