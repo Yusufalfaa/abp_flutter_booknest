@@ -40,9 +40,6 @@ class CommunityService {
     }
   }
 
-
-
-
   // Add a new forum post
   Future<String> createForumPost(Forum forum) async {
     try {
@@ -66,46 +63,41 @@ class CommunityService {
   // Add a reply to a forum post
   Future<String> addReplyToPost(String postId, Reply reply) async {
     try {
-      // Reference to the specific forum post
       DocumentReference postRef = _firestore.collection('forums').doc(postId);
 
-      // Add a reply as a new document in the 'replies' sub-collection
-      await postRef.collection('replies').add({
+      DocumentReference replyRef = await postRef.collection('replies').add({
         'userId': reply.userId,
         'username': reply.username,
         'content': reply.content,
-        'date': FieldValue.serverTimestamp(), // Store server timestamp for reply
+        'date': FieldValue.serverTimestamp(),
       });
 
-      // Optionally, update the main post document with the number of replies
-      await postRef.update({
-        'replies': FieldValue.increment(1),
-      });
+      await postRef.update({'replies': FieldValue.increment(1)});
 
-      return "success";
+      return replyRef.id;
     } catch (e) {
-      print("Error adding reply: $e");
+      print("Error adding reply: \$e");
       return "error";
     }
   }
 
-  // Fetch replies for a particular post
-  Future<List<Reply>> getRepliesForPost(String postId) async {
-    try {
-      QuerySnapshot querySnapshot = await _firestore
-          .collection('forums')
-          .doc(postId)
-          .collection('replies')
-          .orderBy('date', descending: true)
-          .get();
-
-      // Map Firestore documents to Reply model
-      return querySnapshot.docs.map((doc) {
-        return Reply.fromMap(doc.data() as Map<String, dynamic>);
+  // Fetch replies for a particular post using a Stream
+  Stream<List<Reply>> getRepliesForPost(String postId) {
+    return _firestore
+        .collection('forums')
+        .doc(postId)
+        .collection('replies')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Reply.fromMap({
+          'id': doc.id,
+          ...data,
+        });
       }).toList();
-    } catch (e) {
-      print("Error fetching replies: $e");
-      return [];
-    }
+    });
   }
+
 }

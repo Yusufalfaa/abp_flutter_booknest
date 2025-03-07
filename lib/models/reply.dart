@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Reply {
+  String id;
   String userId;
   String username;
   String content;
   Timestamp date;
 
   Reply({
+    required this.id,
     required this.userId,
     required this.username,
     required this.content,
@@ -15,6 +17,7 @@ class Reply {
 
   factory Reply.fromMap(Map<String, dynamic> map) {
     return Reply(
+      id: map['id'],
       userId: map['userId'],
       username: map['username'],
       content: map['content'],
@@ -24,10 +27,13 @@ class Reply {
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'userId': userId,
       'username': username,
       'content': content,
       'date': date,
     };
   }
+
+  DateTime get dateTime => date.toDate();
 }

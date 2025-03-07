@@ -93,10 +93,10 @@ class ForumPost extends StatelessWidget {
   String _formatDate(String dateString) {
     try {
       DateTime dateTime = DateTime.parse(dateString);
-      return DateFormat('dd MMMM yyyy', 'en_US').format(dateTime); // English format
+      return DateFormat('dd MMMM yyyy', 'en_US').format(dateTime);
     } catch (e) {
       print('Error formatting date: $e');
-      return dateString; // Return original string if formatting fails
+      return dateString;
     }
   }
 }

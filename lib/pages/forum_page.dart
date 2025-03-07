@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:booknest/models/forum.dart';
+import 'package:booknest/models/reply.dart';
 import 'package:booknest/services/community.dart';
 import 'package:booknest/widgets/forum_post.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:booknest/pages/replyForum_page.dart';
 import 'package:booknest/pages/newForum_page.dart';
 import 'package:booknest/pages/home_page.dart';
@@ -19,13 +21,31 @@ class ForumPage extends StatefulWidget {
 
 class _ForumPageState extends State<ForumPage> {
   bool isPopularTabActive = true;
+  bool _isLoading = false;  // Flag for loading status
   final CommunityService _communityService = CommunityService();
   late Future<List<Forum>> _forumPostsFuture;
 
   @override
   void initState() {
     super.initState();
-    _forumPostsFuture = _communityService.getForumPosts(byReplies: isPopularTabActive);
+    _forumPostsFuture = _communityService.getForumPosts(byReplies: isPopularTabActive); // Initialize the Future
+  }
+
+  void _fetchForumPosts() {
+    setState(() {
+      _isLoading = true;
+    });
+
+    _communityService.getForumPosts(byReplies: isPopularTabActive).then((posts) {
+      setState(() {
+        _forumPostsFuture = Future.value(posts);  // Update the future with the new posts
+        _isLoading = false;
+      });
+    }).catchError((e) {
+      setState(() {
+        _isLoading = false;
+      });
+    });
   }
 
   @override
@@ -35,6 +55,14 @@ class _ForumPageState extends State<ForumPage> {
       body: FutureBuilder<List<Forum>>(
         future: _forumPostsFuture,
         builder: (context, snapshot) {
+          if (_isLoading) {
+            return Center(
+              child: CircularProgressIndicator(
+                color: Colors.brown,
+              ),
+            );
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           }
@@ -52,7 +80,6 @@ class _ForumPageState extends State<ForumPage> {
                 sliver: SliverList(
                   delegate: SliverChildListDelegate(
                     [
-                      // Header with title and description
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -76,7 +103,6 @@ class _ForumPageState extends State<ForumPage> {
                       ),
                       SizedBox(height: 16),
 
-                      // New Discussion Button
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,
@@ -92,10 +118,14 @@ class _ForumPageState extends State<ForumPage> {
                           if (user == null) {
                             Navigator.pushReplacementNamed(context, '/sign-in');
                           } else {
-                            Navigator.push(
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => const NewForumPage()),
                             );
+
+                            if (result == true) {
+                              _fetchForumPosts();
+                            }
                           }
                         },
                         child: const Text(
@@ -109,7 +139,6 @@ class _ForumPageState extends State<ForumPage> {
 
                       SizedBox(height: 16),
 
-                      // Sorting options (Popular / Latest)
                       Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(buttonRadius),
@@ -124,8 +153,7 @@ class _ForumPageState extends State<ForumPage> {
                                   onTap: () {
                                     setState(() {
                                       isPopularTabActive = true;
-                                      _forumPostsFuture =
-                                          _communityService.getForumPosts(byReplies: true);
+                                      _fetchForumPosts();
                                     });
                                   },
                                   child: Container(
@@ -156,8 +184,7 @@ class _ForumPageState extends State<ForumPage> {
                                   onTap: () {
                                     setState(() {
                                       isPopularTabActive = false;
-                                      _forumPostsFuture =
-                                          _communityService.getForumPosts(byReplies: false);
+                                      _fetchForumPosts();
                                     });
                                   },
                                   child: Container(
@@ -189,7 +216,6 @@ class _ForumPageState extends State<ForumPage> {
                       ),
                       SizedBox(height: 16.0),
 
-                      // Container with posts or no posts message
                       forumPosts.isEmpty
                           ? Center(child: Text('No posts available.'))
                           : ListView.builder(
@@ -214,7 +240,9 @@ class _ForumPageState extends State<ForumPage> {
                                       originalPost: post,
                                     ),
                                   ),
-                                );
+                                ).then((_) {
+                                  _fetchForumPosts();  // Refresh forum posts after returning from reply page
+                                });
                               },
                             ),
                           );

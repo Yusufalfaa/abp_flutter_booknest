@@ -65,7 +65,7 @@ class _NewForumPageState extends State<NewForumPage> {
 
     if (result != 'error') {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Post created successfully')));
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create post')));
     }
