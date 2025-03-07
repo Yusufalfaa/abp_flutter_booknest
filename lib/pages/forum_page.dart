@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:booknest/models/forum.dart';
 import 'package:booknest/services/community.dart';
 import 'package:booknest/widgets/forum_post.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:booknest/pages/replyForum_page.dart';
 import 'package:booknest/pages/newForum_page.dart';
 import 'package:booknest/pages/home_page.dart';
@@ -84,11 +86,17 @@ class _ForumPageState extends State<ForumPage> {
                           minimumSize: Size(double.infinity, 50),
                           padding: EdgeInsets.zero,
                         ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const NewForumPage()),
-                          );
+                        onPressed: () async {
+                          User? user = FirebaseAuth.instance.currentUser;
+
+                          if (user == null) {
+                            Navigator.pushReplacementNamed(context, '/sign-in');
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const NewForumPage()),
+                            );
+                          }
                         },
                         child: const Text(
                           "New Discussion",
@@ -98,6 +106,7 @@ class _ForumPageState extends State<ForumPage> {
                           ),
                         ),
                       ),
+
                       SizedBox(height: 16),
 
                       // Sorting options (Popular / Latest)
