@@ -1,3 +1,4 @@
+import 'package:booknest/pages/newForum_page.dart';
 import 'package:booknest/pages/sign_up_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -48,6 +49,9 @@ class MyApp extends StatelessWidget {
             break;
           case '/forum':
             page = const ForumPage();
+            break;
+          case '/new-forum':
+            page = const NewForumPage();
             break;
           case '/my-books':
             page = const MyBooksPage();

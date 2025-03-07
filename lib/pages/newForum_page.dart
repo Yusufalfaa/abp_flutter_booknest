@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:booknest/services/community.dart';
+import 'package:booknest/models/forum.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:booknest/pages/home_page.dart';
+
+const double buttonRadius = 8.0;
 
 class NewForumPage extends StatefulWidget {
   const NewForumPage({super.key});
@@ -10,18 +16,16 @@ class NewForumPage extends StatefulWidget {
 }
 
 class _NewForumPageState extends State<NewForumPage> {
+  final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
-  final int _maxLength = 2500; // Batas maksimum karakter
+  final int _maxLength = 2500;
 
   @override
   void initState() {
     super.initState();
-    // Listener untuk update UI dan batasi panjang teks
     _contentController.addListener(() {
       if (_contentController.text.length > _maxLength) {
-        // Potong teks jika melebihi 2500 karakter
         _contentController.text = _contentController.text.substring(0, _maxLength);
-        // Posisikan kursor di akhir teks
         _contentController.selection = TextSelection.fromPosition(
           TextPosition(offset: _contentController.text.length),
         );
@@ -32,8 +36,39 @@ class _NewForumPageState extends State<NewForumPage> {
 
   @override
   void dispose() {
+    _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  void _submitPost() async {
+    // Check if the user is logged in
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User not logged in')));
+      return;
+    }
+
+    // Create a new Forum object with the user data
+    Forum forum = Forum(
+      id: '',
+      userId: user.uid,
+      username: user.displayName ?? 'Anonymous',
+      title: _titleController.text.trim(),
+      content: _contentController.text.trim(),
+      replies: 0,
+      date: Timestamp.now(),
+    );
+
+    // Call the createForumPost method to add it to Firestore
+    String result = await CommunityService().createForumPost(forum);
+
+    if (result != 'error') {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Post created successfully')));
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to create post')));
+    }
   }
 
   @override
@@ -75,7 +110,7 @@ class _NewForumPageState extends State<NewForumPage> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    "Sharing, find support, and connect with community",
+                    "Sharing, find support, and connect with the community",
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -85,8 +120,9 @@ class _NewForumPageState extends State<NewForumPage> {
               ),
               SizedBox(height: 16),
 
-              // Field Judul (tanpa label "Title")
+              // Field Judul (Title)
               TextField(
+                controller: _titleController,
                 decoration: InputDecoration(
                   hintText: 'Write your forum title here',
                   hintStyle: TextStyle(fontSize: 14),
@@ -100,7 +136,7 @@ class _NewForumPageState extends State<NewForumPage> {
               ),
               SizedBox(height: 16),
 
-              // Field Konten
+              // Field Konten (Content)
               TextField(
                 controller: _contentController,
                 maxLines: 5,
@@ -121,7 +157,6 @@ class _NewForumPageState extends State<NewForumPage> {
               ),
               SizedBox(height: 8),
 
-              // Baris untuk counter dan tombol Post di luar TextField
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -142,7 +177,7 @@ class _NewForumPageState extends State<NewForumPage> {
                       minimumSize: Size(100, 30),
                       padding: EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    onPressed: () {},
+                    onPressed: _submitPost,
                     child: Text(
                       'Post',
                       style: TextStyle(
@@ -159,5 +194,4 @@ class _NewForumPageState extends State<NewForumPage> {
       ),
     );
   }
-
 }
