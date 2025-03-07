@@ -20,12 +20,9 @@ const Color primaryColor = Color(0xFFC76E6F);
 const Color blackColor = Color(0xFF272727);
 const Color greyColor = Color(0xE8E8E8);
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -37,9 +34,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: "BookNest",
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        scaffoldBackgroundColor: backgroundColor,
-      ),
+      theme: ThemeData(scaffoldBackgroundColor: backgroundColor),
       initialRoute: '/',
       onGenerateRoute: (settings) {
         Widget page;
@@ -66,7 +61,8 @@ class MyApp extends StatelessWidget {
             page = const SignUpPage();
             break;
           case '/bookdetail':
-            page = const BookDetailPage();
+            final book = settings.arguments as Map<String, dynamic>;
+            page = BookDetailsPage(book: book);
           case '/':
           default:
             page = const HomePage();

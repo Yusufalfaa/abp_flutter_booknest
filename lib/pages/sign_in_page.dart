@@ -24,7 +24,7 @@ class _SignInPageState extends State<SignInPage> {
 
   bool _isPasswordObscured = true;
   bool _isLoading = false;
-  String _statusMessage = ''; // For displaying success/error messages
+  String _statusMessage = '';
 
   // Sign In Function using email and password
   Future<void> _signIn() async {
@@ -35,7 +35,7 @@ class _SignInPageState extends State<SignInPage> {
     if (_formKey.currentState != null && _formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
-        _statusMessage = ''; // Clear previous messages
+        _statusMessage = '';
       });
 
       try {
