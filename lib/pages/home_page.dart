@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pushNamedAndRemoveUntil(
                   context,
                   '/',
-                  (route) => false,
+                      (route) => false,
                 );
 
                 // Show a SnackBar notification upon successful logout
@@ -115,12 +115,9 @@ class _HomePageState extends State<HomePage> {
         title: Image.asset("assets/BookNest.png", height: 40),
       ),
       endDrawer: _buildDrawer(context),
-      body:
-          _isFaqPage
-              ? const FaqPage()
-              : (_selectedIndex == 0
-                  ? _buildHomeContent()
-                  : _pages[_selectedIndex]),
+      body: _isFaqPage
+          ? const FaqPage()
+          : (_selectedIndex == 0 ? _buildHomeContent() : _pages[_selectedIndex]),
 
       bottomNavigationBar: BottomNavigationBar(
         items: const [
@@ -134,7 +131,7 @@ class _HomePageState extends State<HomePage> {
         ],
         currentIndex: _selectedIndex,
         backgroundColor: lightColor,
-        selectedItemColor: _isFaqPage? blackColor : primaryColor,
+        selectedItemColor: _isFaqPage ? blackColor : primaryColor,
         unselectedItemColor: blackColor,
         selectedFontSize: 14,
         unselectedFontSize: 14,
@@ -209,10 +206,9 @@ class _HomePageState extends State<HomePage> {
 
         var books = snapshot.data!.docs;
         int maxRecommendations = 8;
-        int itemCount =
-            books.length > maxRecommendations
-                ? maxRecommendations
-                : books.length;
+        int itemCount = books.length > maxRecommendations
+            ? maxRecommendations
+            : books.length;
 
         return SizedBox(
           height: 150,
@@ -265,10 +261,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                           Text(
                             book['description'] != null &&
-                                    book['description'].length > 50
+                                book['description'].length > 50
                                 ? '${book['description'].substring(0, 50)} ...'
                                 : (book['description'] ??
-                                    'Unknown Description'),
+                                'Unknown Description'),
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
@@ -423,10 +419,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
-
-
   Widget _buildDrawer(BuildContext context) {
     return Drawer(
       backgroundColor: backgroundColor,
@@ -441,45 +433,45 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: ListView(
               children:
-                  _currentUser == null
-                      ? [
-                        _buildDrawerItem(
-                          context,
-                          'Sign In',
-                          '/sign-in',
-                          Icons.login,
-                        ),
-                        _buildDrawerItem(
-                          context,
-                          'Settings',
-                          '/settings',
-                          Icons.settings,
-                        ),
-                      ]
-                      : [
-                        _buildDrawerItem(
-                          context,
-                          'Profile',
-                          '/profile',
-                          Icons.person,
-                        ),
-                        ListTile(
-                          title: const Text(
-                            'Log Out',
-                            style: TextStyle(color: blackColor),
-                          ),
-                          leading: Icon(Icons.login, color: blackColor),
-                          onTap: () {
-                            _showLogoutDialog(context);
-                          },
-                        ),
-                        _buildDrawerItem(
-                          context,
-                          'Settings',
-                          '/settings',
-                          Icons.settings,
-                        ),
-                      ],
+              _currentUser == null
+                  ? [
+                _buildDrawerItem(
+                  context,
+                  'Sign In',
+                  '/sign-in',
+                  Icons.login,
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Settings',
+                  '/settings',
+                  Icons.settings,
+                ),
+              ]
+                  : [
+                _buildDrawerItem(
+                  context,
+                  'Profile',
+                  '/profile',
+                  Icons.person,
+                ),
+                ListTile(
+                  title: const Text(
+                    'Log Out',
+                    style: TextStyle(color: blackColor),
+                  ),
+                  leading: Icon(Icons.login, color: blackColor),
+                  onTap: () {
+                    _showLogoutDialog(context);
+                  },
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Settings',
+                  '/settings',
+                  Icons.settings,
+                ),
+              ],
             ),
           ),
         ],
@@ -488,11 +480,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDrawerItem(
-    BuildContext context,
-    String title,
-    String route,
-    IconData icon,
-  ) {
+      BuildContext context,
+      String title,
+      String route,
+      IconData icon,
+      ) {
     return ListTile(
       title: Text(title, style: const TextStyle(color: blackColor)),
       leading: Icon(icon, color: blackColor),
