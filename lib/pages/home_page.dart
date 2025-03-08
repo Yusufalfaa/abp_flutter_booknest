@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../pages/all_books_page.dart';
 import '../pages/forum_page.dart';
 import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
-import 'package:http/http.dart';
+import '../pages/book_detail_page.dart';
+import 'package:booknest/services/auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
 const Color primaryColor = Color(0xFFC76E6F);
 const Color blackColor = Color(0xFF272727);
+const double buttonRadius = 12.0;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,12 +24,33 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   bool _isFaqPage = false;
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      setState(() {
+        _currentUser = user;
+      });
+    });
+  }
 
   final List<Widget> _pages = [
-    Center(child: Text("Welcome to Home Page")),
+    const Placeholder(),
     const AllBooksPage(),
     const ForumPage(),
     const MyBooksPage(),
+  ];
+
+  final List<String> categories = [
+    "Fiction",
+    "Fantasy",
+    "Drama",
+    "Philosophy",
+    "History",
+    "Poetry",
+    "Science",
   ];
 
   void _openFaqPage() {
@@ -34,29 +59,77 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // Logout Alert
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: lightColor,
+          title: const Text("Confirm Logout"),
+          content: const Text("Are you sure you want to log out?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await AuthService().signOut();
+                setState(() {
+                  _currentUser = null;
+                });
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                      (route) => false,
+                );
+
+                // Show a SnackBar notification upon successful logout
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('You have successfully logged out!')),
+                );
+              },
+              child: const Text(
+                "Log Out",
+                style: TextStyle(color: primaryColor),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: lightColor,
-        title: IconButton(
-          onPressed: () => Navigator.pushReplacementNamed(context, '/'),
-          icon: Image.asset("assets/BookNest.png", height: 40),
-        ),
+        title: Image.asset("assets/BookNest.png", height: 40),
       ),
-      endDrawer: buildDrawer(context),
-      body: _isFaqPage ? const FaqPage() : _pages[_selectedIndex],
+      endDrawer: _buildDrawer(context),
+      body: _isFaqPage
+          ? const FaqPage()
+          : (_selectedIndex == 0 ? _buildHomeContent() : _pages[_selectedIndex]),
 
-      // Bottom Navigation Bar
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'All Books'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.library_books),
+            label: 'All Books',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'MyBooks'),
         ],
-        currentIndex: _isFaqPage ? _selectedIndex : _selectedIndex,
+        currentIndex: _selectedIndex,
         backgroundColor: lightColor,
         selectedItemColor: _isFaqPage ? blackColor : primaryColor,
         unselectedItemColor: blackColor,
@@ -71,56 +144,354 @@ class _HomePageState extends State<HomePage> {
         type: BottomNavigationBarType.fixed,
       ),
 
-
-      // Floating Action Button untuk membuka FAQ
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         onPressed: _openFaqPage,
         shape: const CircleBorder(),
-        child: const Text('?', style: TextStyle(fontSize: 24, color: Colors.white)),
+        child: const Text(
+          '?',
+          style: TextStyle(fontSize: 24, color: Colors.white),
+        ),
       ),
     );
   }
-}
 
-// Widget Drawer hanya untuk Sign In
-Widget buildDrawer(BuildContext context) {
-  return Drawer(
-    backgroundColor: backgroundColor,
-    child: Column(
+  // Home Page Content
+  Widget _buildHomeContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 150,
+            decoration: BoxDecoration(
+              image: const DecorationImage(
+                image: AssetImage("assets/bgDarker.png"),
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              "Find and rate your best book",
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "We sorted the best for you",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          _buildBookRecommendation(),
+          ...categories
+              .map((category) => _buildCategorySection(category))
+              .toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookRecommendation() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('books').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        var books = snapshot.data!.docs;
+        int maxRecommendations = 8;
+        int itemCount = books.length > maxRecommendations
+            ? maxRecommendations
+            : books.length;
+
+        return SizedBox(
+          height: 150,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: itemCount,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            itemBuilder: (context, index) {
+              var book = books[index].data() as Map<String, dynamic>;
+
+              return Container(
+                width: MediaQuery.of(context).size.width * 0.8,
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(buttonRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: NetworkImage(book['thumbnail'] ?? ''),
+                          fit: BoxFit.cover,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            book['title'] ?? 'No Title',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            book['description'] != null &&
+                                book['description'].length > 50
+                                ? '${book['description'].substring(0, 50)} ...'
+                                : (book['description'] ??
+                                'Unknown Description'),
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  buttonRadius,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                            ),
+                            onPressed: () {},
+                            child: const Text(
+                              "Add to List",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategorySection(String category) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListTile(
-          title: Center(child: Image.asset("assets/BookNest.png", height: 30)),
-        ),
-        const Divider(thickness: 1, color: Colors.grey),
-        Expanded(
-          child: ListView(
-            children: [
-              _buildDrawerItem(context, 'Sign Up', '/sign-up'),
-              _buildDrawerItem(context, 'Sign In', '/sign-in'),
-              _buildDrawerItem(context, 'Settings', '/settings'),
-            ],
-          ),
-        ),
         Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Align(
-            alignment: Alignment.bottomCenter,
-            child: Text('© 2025 BookNest',
-                style: TextStyle(color: Colors.grey, fontSize: 12)),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text(
+            category,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
+        ),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('books')
+              .where('categories', isEqualTo: category)
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            var books = snapshot.data!.docs;
+            int maxBooks = 10;
+            int itemCount = books.length > maxBooks ? maxBooks : books.length;
+
+            return SizedBox(
+              height: 168,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: itemCount + 1,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                itemBuilder: (context, index) {
+                  if (index < itemCount) {
+                    var book = books[index].data() as Map<String, dynamic>;
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BookDetailsPage(book: book),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 100,
+                        margin: const EdgeInsets.only(right: 10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Thumbnail image
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                book['thumbnail'] ?? '',
+                                width: 100,
+                                height: 140,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            // Title of the book
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Text(
+                                book['title'] ?? 'No Title',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                maxLines: 1,
+                                softWrap: false,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  } else {
+                    return SizedBox(
+                      width: 100,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(buttonRadius),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        onPressed: () {
+                          // Navigate to a full category page if needed
+                        },
+                        child: const Text(
+                          "View All",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            );
+          },
         ),
       ],
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildDrawerItem(BuildContext context, String title, String route) {
-  return ListTile(
-    title: Text(title, style: const TextStyle(color: blackColor)),
-    onTap: () {
-      Navigator.pop(context);
-      Navigator.pushNamed(context, route);
-    },
-  );
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: backgroundColor,
+      child: Column(
+        children: [
+          ListTile(
+            title: Center(
+              child: Image.asset("assets/BookNest.png", height: 30),
+            ),
+          ),
+          const Divider(thickness: 1, color: Colors.grey),
+          Expanded(
+            child: ListView(
+              children:
+              _currentUser == null
+                  ? [
+                _buildDrawerItem(
+                  context,
+                  'Sign In',
+                  '/sign-in',
+                  Icons.login,
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Settings',
+                  '/settings',
+                  Icons.settings,
+                ),
+              ]
+                  : [
+                _buildDrawerItem(
+                  context,
+                  'Profile',
+                  '/profile',
+                  Icons.person,
+                ),
+                ListTile(
+                  title: const Text(
+                    'Log Out',
+                    style: TextStyle(color: blackColor),
+                  ),
+                  leading: Icon(Icons.login, color: blackColor),
+                  onTap: () {
+                    _showLogoutDialog(context);
+                  },
+                ),
+                _buildDrawerItem(
+                  context,
+                  'Settings',
+                  '/settings',
+                  Icons.settings,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(
+      BuildContext context,
+      String title,
+      String route,
+      IconData icon,
+      ) {
+    return ListTile(
+      title: Text(title, style: const TextStyle(color: blackColor)),
+      leading: Icon(icon, color: blackColor),
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, route);
+      },
+    );
+  }
 }
