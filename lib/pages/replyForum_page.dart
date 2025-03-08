@@ -23,16 +23,15 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
   final TextEditingController _replyController = TextEditingController();
   int _charCount = 0;
   final int _maxLength = 2500;
-  bool _isLoading = false; // Flag untuk status loading
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _replyController.addListener(() {
-      // Update character count without rebuilding the entire widget
+      // Update character count
       int charCount = _replyController.text.length;
       if (charCount <= _maxLength) {
-        // Only update the char count, no need to rebuild the entire widget
         _charCount = charCount;
       }
     });
@@ -47,7 +46,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
   void _submitReply() async {
     if (_replyController.text.trim().isNotEmpty && _charCount <= _maxLength) {
       setState(() {
-        _isLoading = true; // Set loading to true when posting reply
+        _isLoading = true;
       });
 
       User? user = FirebaseAuth.instance.currentUser;
@@ -65,10 +64,10 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
       await CommunityService().addReplyToPost(widget.originalPost.id, reply);
 
       setState(() {
-        widget.originalPost.replies += 1; // Increment reply count
-        _isLoading = false; // Stop loading after reply is posted
-        _replyController.clear(); // Clear the text field
-        _charCount = 0; // Reset character count
+        widget.originalPost.replies += 1;
+        _isLoading = false;
+        _replyController.clear();
+        _charCount = 0;
       });
     }
   }
@@ -114,7 +113,6 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                                 widget.originalPost.username ?? 'Unknown User',
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
-                              // Format tanggal post sesuai dengan format yang diinginkan (yyyy-MM-dd)
                               Text(
                                 DateFormat('dd MMMM yyyy').format(widget.originalPost.date.toDate()),
                                 style: const TextStyle(color: Colors.grey, fontSize: 12),
@@ -233,19 +231,20 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                           final reply = replies[index];
                           return ReplyPost(
                             username: reply.username,
-                            date: DateFormat('yyyy-MM-dd').format(reply.dateTime), // format tanggal
+                            date: DateFormat('yyyy-MM-dd').format(reply.dateTime),
                             content: reply.content,
                           );
                         },
                       );
                     },
                   ),
-                  // Loading Indicator (Brown Color)
+
+                  // Loading Indicator
                   if (_isLoading)
                     Container(
                       child: Center(
                         child: CircularProgressIndicator(
-                          color: Colors.brown, // Set the color of the loading spinner
+                          color: Colors.brown,
                         ),
                       ),
                     ),

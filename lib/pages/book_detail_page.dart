@@ -18,6 +18,7 @@ class BookDetailsPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 40),
             Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),

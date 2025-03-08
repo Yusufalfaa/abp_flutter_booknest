@@ -60,7 +60,7 @@ class _NewForumPageState extends State<NewForumPage> {
       date: Timestamp.now(),
     );
 
-    // Call the createForumPost method to add it to Firestore
+    // method add to Firestore
     String result = await CommunityService().createForumPost(forum);
 
     if (result != 'error') {

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
 import 'package:booknest/models/forum.dart';
-import 'package:booknest/models/reply.dart';
 import 'package:booknest/services/community.dart';
 import 'package:booknest/widgets/forum_post.dart';
 import 'package:booknest/pages/replyForum_page.dart';
@@ -21,14 +18,14 @@ class ForumPage extends StatefulWidget {
 
 class _ForumPageState extends State<ForumPage> {
   bool isPopularTabActive = true;
-  bool _isLoading = false;  // Flag for loading status
+  bool _isLoading = false;
   final CommunityService _communityService = CommunityService();
   late Future<List<Forum>> _forumPostsFuture;
 
   @override
   void initState() {
     super.initState();
-    _forumPostsFuture = _communityService.getForumPosts(byReplies: isPopularTabActive); // Initialize the Future
+    _forumPostsFuture = _communityService.getForumPosts(byReplies: isPopularTabActive);
   }
 
   void _fetchForumPosts() {
@@ -38,7 +35,7 @@ class _ForumPageState extends State<ForumPage> {
 
     _communityService.getForumPosts(byReplies: isPopularTabActive).then((posts) {
       setState(() {
-        _forumPostsFuture = Future.value(posts);  // Update the future with the new posts
+        _forumPostsFuture = Future.value(posts);
         _isLoading = false;
       });
     }).catchError((e) {
@@ -241,7 +238,7 @@ class _ForumPageState extends State<ForumPage> {
                                     ),
                                   ),
                                 ).then((_) {
-                                  _fetchForumPosts();  // Refresh forum posts after returning from reply page
+                                  _fetchForumPosts();
                                 });
                               },
                             ),

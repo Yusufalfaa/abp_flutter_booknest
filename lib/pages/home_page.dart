@@ -338,7 +338,7 @@ class _HomePageState extends State<HomePage> {
               height: 168,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: itemCount + 1, // +1 for the "View All" button
+                itemCount: itemCount + 1,
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 itemBuilder: (context, index) {
                   if (index < itemCount) {
