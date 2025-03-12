@@ -52,7 +52,7 @@ class AuthService {
       auth.User? user = result.user;
       if (user == null) return null;
 
-      // Save user data to Firestore
+      // Save user data to Firestore (including username)
       Map<String, dynamic> userData = {
         "username": username,
         "email": email,
@@ -69,6 +69,7 @@ class AuthService {
       return null;
     }
   }
+
 
   // Sign In (Login)
   Future<model.User?> signInWithEmailAndPassword(String email,

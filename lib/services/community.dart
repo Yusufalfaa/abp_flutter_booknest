@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:booknest/models/forum.dart';
 import 'package:booknest/models/reply.dart';
+
 
 class CommunityService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -30,8 +32,8 @@ class CommunityService {
         print("Forum Data: $data");
 
         return Forum.fromMap({
-          'id': doc.id, // Pastikan id selalu ada
-          ...data, // Spread semua data dari Firestore
+          'id': doc.id,
+          ...data,
         });
       }).toList();
     } catch (e) {
@@ -43,17 +45,29 @@ class CommunityService {
   // Add a new forum post
   Future<String> createForumPost(Forum forum) async {
     try {
+      // Ambil username dari Firebase Auth
+      User? user = FirebaseAuth.instance.currentUser;
+      String username;
+
+      if (user != null) {
+        // Ambil username dari Firestore jika tidak ada di FirebaseAuth
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+        username = userDoc['username'] ?? user.email ?? 'Anonymous';
+      } else {
+        username = 'Anonymous';
+      }
+
       // Add a new forum post with current timestamp
       DocumentReference docRef = await _firestore.collection('forums').add({
         'userId': forum.userId,
-        'username': forum.username,
+        'username': username,
         'title': forum.title,
         'content': forum.content,
         'replies': forum.replies,
-        'date': FieldValue.serverTimestamp(), // Use server timestamp here
+        'date': FieldValue.serverTimestamp(),
       });
 
-      return docRef.id; // Return the newly created forum's document ID
+      return docRef.id;
     } catch (e) {
       print("Error creating forum post: $e");
       return "error";
@@ -63,20 +77,34 @@ class CommunityService {
   // Add a reply to a forum post
   Future<String> addReplyToPost(String postId, Reply reply) async {
     try {
+      // Ambil user yang sedang login dari FirebaseAuth
+      User? user = FirebaseAuth.instance.currentUser;
+      String username;
+
+      if (user != null) {
+        // Ambil username dari Firestore jika tidak ada di FirebaseAuth
+        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+        username = userDoc['username'] ?? user.email ?? 'Anonymous';
+      } else {
+        username = 'Anonymous';
+      }
+
+      // Menambahkan reply ke dalam post yang sudah ada
       DocumentReference postRef = _firestore.collection('forums').doc(postId);
 
       DocumentReference replyRef = await postRef.collection('replies').add({
         'userId': reply.userId,
-        'username': reply.username,
+        'username': username,
         'content': reply.content,
         'date': FieldValue.serverTimestamp(),
       });
 
+      // Update jumlah replies pada forum post
       await postRef.update({'replies': FieldValue.increment(1)});
 
       return replyRef.id;
     } catch (e) {
-      print("Error adding reply: \$e");
+      print("Error adding reply: $e");
       return "error";
     }
   }
