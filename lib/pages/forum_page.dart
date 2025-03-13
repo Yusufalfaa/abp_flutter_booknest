@@ -121,7 +121,7 @@ class _ForumPageState extends State<ForumPage> {
                           );
 
                           if (result == true) {
-                            _fetchForumPosts();
+                            _fetchForumPosts(); // Refresh after creating a new post
                           }
                         }
                       },
@@ -239,13 +239,13 @@ class _ForumPageState extends State<ForumPage> {
                                 ),
                               ),
                             ).then((_) {
-                              _fetchForumPosts();
+                              _fetchForumPosts(); // Refresh after returning from the reply page
                             });
                           },
                           // Pass the onDeleteTap callback to ForumPost
                           onDeleteTap: post.userId == FirebaseAuth.instance.currentUser?.uid
                               ? () {
-                            _deleteForumPost(post.id);
+                            _deleteForumPost(post.id); // Delete post and refresh list
                           }
                               : null,
                         ),

@@ -42,6 +42,26 @@ class CommunityService {
     }
   }
 
+  // Fetch a single forum post by ID
+  Future<Forum> getForumPostById(String postId) async {
+    try {
+      DocumentSnapshot docSnapshot = await _firestore.collection('forums').doc(postId).get();
+
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data() as Map<String, dynamic>;
+        return Forum.fromMap({
+          'id': docSnapshot.id,
+          ...data,
+        });
+      } else {
+        throw Exception('Forum post not found');
+      }
+    } catch (e) {
+      print("Error getting forum post by ID: $e");
+      rethrow;
+    }
+  }
+
   // Add a new forum post
   Future<String> createForumPost(Forum forum) async {
     try {
@@ -131,7 +151,6 @@ class CommunityService {
   // Delete a forum post by ID
   Future<void> deleteForumPost(String postId) async {
     try {
-      // Delete the replies first
       QuerySnapshot repliesSnapshot = await _firestore
           .collection('forums')
           .doc(postId)
@@ -142,10 +161,30 @@ class CommunityService {
         await reply.reference.delete();
       }
 
-      // Then delete the post itself
       await _firestore.collection('forums').doc(postId).delete();
     } catch (e) {
       print("Error deleting forum post: $e");
     }
   }
+
+  // Delete a reply by ID from the specific forum post's replies subcollection
+  Future<void> deleteReply(String postId, String replyId) async {
+    try {
+      DocumentReference postRef = FirebaseFirestore.instance.collection('forums').doc(postId);
+
+      await postRef.collection('replies').doc(replyId).delete();
+
+      QuerySnapshot repliesSnapshot = await postRef.collection('replies').get();
+      int repliesCount = repliesSnapshot.docs.length;
+
+      await postRef.update({
+        'replies': repliesCount,
+      });
+    } catch (e) {
+      print("Error deleting reply: $e");
+      throw e;
+    }
+  }
+
+
 }

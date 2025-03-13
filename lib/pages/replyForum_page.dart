@@ -1,14 +1,12 @@
+import 'package:booknest/main.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
-import 'package:booknest/models/forum.dart';
-import 'package:booknest/models/reply.dart';
 import 'package:booknest/services/community.dart';
 import 'package:booknest/widgets/reply_post.dart';
-import 'package:booknest/pages/home_page.dart';
-
-const double buttonRadius = 8.0;
+import 'package:booknest/models/forum.dart';
+import 'package:booknest/models/reply.dart';
 
 class ReplyForumPage extends StatefulWidget {
   final Forum originalPost;
@@ -29,7 +27,6 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
   void initState() {
     super.initState();
     _replyController.addListener(() {
-      // Update character count
       int charCount = _replyController.text.length;
       if (charCount <= _maxLength) {
         _charCount = charCount;
@@ -43,6 +40,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
     super.dispose();
   }
 
+  // Function to submit the reply
   void _submitReply() async {
     if (_replyController.text.trim().isNotEmpty && _charCount <= _maxLength) {
       setState(() {
@@ -52,6 +50,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
+      // Create a new reply object
       Reply reply = Reply(
         id: '',
         userId: user.uid,
@@ -60,15 +59,32 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
         date: Timestamp.now(),
       );
 
-      // Tambahkan reply ke post
+      // Add the reply to the post
       await CommunityService().addReplyToPost(widget.originalPost.id, reply);
 
+      // Fetch the updated replies to get the new reply count
+      _fetchUpdatedForumPost();
+
       setState(() {
-        widget.originalPost.replies += 1;
         _isLoading = false;
         _replyController.clear();
         _charCount = 0;
       });
+    }
+  }
+
+  // Fetch the updated forum post and update the reply count
+  Future<void> _fetchUpdatedForumPost() async {
+    try {
+      // Fetch the updated forum post from Firestore
+      Forum updatedPost = await CommunityService().getForumPostById(widget.originalPost.id);
+
+      // Update the replies count in the UI
+      setState(() {
+        widget.originalPost.replies = updatedPost.replies;
+      });
+    } catch (e) {
+      print('Error fetching updated forum post: $e');
     }
   }
 
@@ -138,7 +154,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
               ),
             ),
 
-            // Textarea if user is logged in
+            // Textarea for user to write a reply if logged in
             if (user != null) ...[
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -184,7 +200,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                           backgroundColor: primaryColor,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(buttonRadius),
+                            borderRadius: BorderRadius.circular(8),
                           ),
                         ),
                         child: const Text('Post'),
@@ -213,44 +229,37 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
             const SizedBox(height: 12),
 
             Expanded(
-              child: Stack(
-                children: [
-                  StreamBuilder<List<Reply>>(
-                    stream: CommunityService().getRepliesForPost(widget.originalPost.id),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Center(child: Text("Reply not available"));
-                      }
-                      final replies = snapshot.data!;
-                      return ListView.builder(
-                        itemCount: replies.length,
-                        itemBuilder: (context, index) {
-                          final reply = replies[index];
-                          return ReplyPost(
-                            username: reply.username,
-                            date: DateFormat('yyyy-MM-dd').format(reply.dateTime),
-                            content: reply.content,
-                          );
+              child: StreamBuilder<List<Reply>>(
+                stream: CommunityService().getRepliesForPost(widget.originalPost.id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text("Reply not available"));
+                  }
+                  final replies = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: replies.length,
+                    itemBuilder: (context, index) {
+                      final reply = replies[index];
+                      return ReplyPost(
+                        username: reply.username,
+                        date: DateFormat('yyyy-MM-dd').format(reply.dateTime),
+                        content: reply.content,
+                        replyId: reply.id,
+                        postId: widget.originalPost.id,
+                        userId: reply.userId,
+                        onDelete: () {
+                          // When the reply is deleted, refresh the reply count
+                          _fetchUpdatedForumPost();
                         },
                       );
                     },
-                  ),
-
-                  // Loading Indicator
-                  if (_isLoading)
-                    Container(
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.brown,
-                        ),
-                      ),
-                    ),
-                ],
+                  );
+                },
               ),
-            ),
+            )
           ],
         ),
       ),

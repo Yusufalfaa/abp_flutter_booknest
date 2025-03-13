@@ -38,15 +38,6 @@ class _FaqPage extends State<FaqPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFC76E6F),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(''), // Empty title
-      ),
       body: Column(
         children: [
           // Pink header section
@@ -58,6 +49,7 @@ class _FaqPage extends State<FaqPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title section
+                  const SizedBox(height: 24),
                   const Text(
                     'FAQ and Support',
                     style: TextStyle(
