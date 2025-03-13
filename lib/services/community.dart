@@ -3,10 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:booknest/models/forum.dart';
 import 'package:booknest/models/reply.dart';
 
-
 class CommunityService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Fetch forum posts sorted by either replies or date
   Future<List<Forum>> getForumPosts({bool byReplies = true}) async {
     try {
       QuerySnapshot querySnapshot;
@@ -128,4 +128,24 @@ class CommunityService {
     });
   }
 
+  // Delete a forum post by ID
+  Future<void> deleteForumPost(String postId) async {
+    try {
+      // Delete the replies first
+      QuerySnapshot repliesSnapshot = await _firestore
+          .collection('forums')
+          .doc(postId)
+          .collection('replies')
+          .get();
+
+      for (var reply in repliesSnapshot.docs) {
+        await reply.reference.delete();
+      }
+
+      // Then delete the post itself
+      await _firestore.collection('forums').doc(postId).delete();
+    } catch (e) {
+      print("Error deleting forum post: $e");
+    }
+  }
 }

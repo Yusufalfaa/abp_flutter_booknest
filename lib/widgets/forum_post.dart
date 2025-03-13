@@ -1,5 +1,7 @@
+import 'package:booknest/main.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForumPost extends StatelessWidget {
   final String username;
@@ -7,7 +9,9 @@ class ForumPost extends StatelessWidget {
   final String title;
   final String content;
   final int replies;
+  final String userId;
   final VoidCallback onReplyTap;
+  final VoidCallback? onDeleteTap;
 
   const ForumPost({
     required this.username,
@@ -15,7 +19,9 @@ class ForumPost extends StatelessWidget {
     required this.title,
     required this.content,
     required this.replies,
+    required this.userId,
     required this.onReplyTap,
+    this.onDeleteTap,
   });
 
   @override
@@ -44,21 +50,71 @@ class ForumPost extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    username,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  // Row to align username, date, and the delete icon (three-dot)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            username,
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          SizedBox(height: 4),
+                          Transform.translate(
+                            offset: Offset(0, -4),
+                            child: Text(
+                              formattedDate,
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      if (onDeleteTap != null && userId == FirebaseAuth.instance.currentUser?.uid)
+                      // PopupMenuButton to display 3 dots menu with delete option
+                        PopupMenuButton<String>(
+                          icon: Icon(Icons.more_vert, size: 20),
+                          color: lightColor,
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              _showDeleteDialog(context);
+                            }
+                          },
+                          itemBuilder: (BuildContext context) => [
+                            PopupMenuItem<String>(
+                              value: 'delete',
+                              padding: EdgeInsets.symmetric(vertical: 0, horizontal: 0),
+                              height: 30,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: 100,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.delete, color: Colors.red, size: 18),
+                                      SizedBox(width: 8),
+                                      Text("Delete", style: TextStyle(color: Colors.red, fontSize: 14)),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
                   ),
-                  SizedBox(height: 0),
-                  Text(
-                    formattedDate,
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                  SizedBox(height: 8),
+
+                  SizedBox(height: 4),
                   Text(
                     title,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 4),
+                  SizedBox(height: 6),
                   Text(
                     content,
                     style: TextStyle(fontSize: 14),
@@ -98,5 +154,42 @@ class ForumPost extends StatelessWidget {
       print('Error formatting date: $e');
       return dateString;
     }
+  }
+
+  // Function to show the Delete confirmation dialog
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: lightColor,
+          contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          title: const Text("Confirm Delete"),
+          content: const Text(
+            "Are you sure you want to delete this post?",
+            style: TextStyle(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () async {
+                onDeleteTap?.call();
+                Navigator.pop(dialogContext);
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: primaryColor),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
