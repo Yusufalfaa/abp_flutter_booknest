@@ -11,7 +11,7 @@ class BookDetailsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(book['title'] ?? 'Book Details'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: lightColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
