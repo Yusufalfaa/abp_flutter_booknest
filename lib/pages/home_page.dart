@@ -187,7 +187,9 @@ class _HomePageState extends State<HomePage> {
             "We sorted the best for you",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
+          const SizedBox(height: 10),
           _buildBookRecommendation(),
+          const SizedBox(height: 10),
           ...categories
               .map((category) => _buildCategorySection(category))
               .toList(),
@@ -226,13 +228,13 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(buttonRadius),
-                  boxShadow: [
+                  /*boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
-                  ],
+                  ],*/
                 ),
                 child: Row(
                   children: [
