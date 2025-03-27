@@ -5,6 +5,7 @@ import '../pages/forum_page.dart';
 import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
 import '../pages/book_detail_page.dart';
+import '../services/book_service.dart';
 import 'package:booknest/services/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -45,7 +46,6 @@ class _HomePageState extends State<HomePage> {
 
   final List<String> categories = [
     "Fiction",
-    "Fantasy",
     "Drama",
     "Philosophy",
     "History",
@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pushNamedAndRemoveUntil(
                   context,
                   '/',
-                      (route) => false,
+                  (route) => false,
                 );
 
                 // Show a SnackBar notification upon successful logout
@@ -115,9 +115,12 @@ class _HomePageState extends State<HomePage> {
         title: Image.asset("assets/BookNest.png", height: 40),
       ),
       endDrawer: _buildDrawer(context),
-      body: _isFaqPage
-          ? const FaqPage()
-          : (_selectedIndex == 0 ? _buildHomeContent() : _pages[_selectedIndex]),
+      body:
+          _isFaqPage
+              ? const FaqPage()
+              : (_selectedIndex == 0
+                  ? _buildHomeContent()
+                  : _pages[_selectedIndex]),
 
       bottomNavigationBar: BottomNavigationBar(
         items: const [
@@ -156,8 +159,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Home Page Content
   Widget _buildHomeContent() {
+    final String? userId = FirebaseAuth.instance.currentUser?.uid;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -187,7 +191,7 @@ class _HomePageState extends State<HomePage> {
             "We sorted the best for you",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          _buildBookRecommendation(),
+          if (userId != null) _buildBookRecommendation(userId),
           ...categories
               .map((category) => _buildCategorySection(category))
               .toList(),
@@ -196,7 +200,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBookRecommendation() {
+  Widget _buildBookRecommendation(String userId) {
+    // Accept userId as a parameter
+    final BookService bookService = BookService();
+
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance.collection('books').snapshots(),
       builder: (context, snapshot) {
@@ -206,9 +213,10 @@ class _HomePageState extends State<HomePage> {
 
         var books = snapshot.data!.docs;
         int maxRecommendations = 8;
-        int itemCount = books.length > maxRecommendations
-            ? maxRecommendations
-            : books.length;
+        int itemCount =
+            books.length > maxRecommendations
+                ? maxRecommendations
+                : books.length;
 
         return SizedBox(
           height: 150,
@@ -218,6 +226,7 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.symmetric(horizontal: 8),
             itemBuilder: (context, index) {
               var book = books[index].data() as Map<String, dynamic>;
+              String bookId = books[index].id;
 
               return Container(
                 width: MediaQuery.of(context).size.width * 0.8,
@@ -261,10 +270,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                           Text(
                             book['description'] != null &&
-                                book['description'].length > 50
+                                    book['description'].length > 50
                                 ? '${book['description'].substring(0, 50)} ...'
                                 : (book['description'] ??
-                                'Unknown Description'),
+                                    'Unknown Description'),
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
@@ -283,7 +292,43 @@ class _HomePageState extends State<HomePage> {
                                 vertical: 6,
                               ),
                             ),
-                            onPressed: () {},
+                            onPressed: () async {
+                              try {
+                                await bookService.addBook(userId, {
+                                  "isbn13": book["isbn13"] ?? "",
+                                  "title": book["title"] ?? "No Title",
+                                  "authors":
+                                      book["authors"] ?? "Unknown Author",
+                                  "categories":
+                                      book["categories"] ?? "Uncategorized",
+                                  "thumbnail": book["thumbnail"] ?? "",
+                                  "description":
+                                      book["description"] ?? "No Description",
+                                });
+
+                                print(
+                                  "Book '${book["title"]}' added to user $userId",
+                                ); // Log the added book
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "${book["title"]} added to your list!",
+                                    ),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      "Failed to add book: ${e.toString()}",
+                                    ),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
                             child: const Text(
                               "Add to List",
                               style: TextStyle(
@@ -317,10 +362,11 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('books')
-              .where('categories', isEqualTo: category)
-              .snapshots(),
+          stream:
+              FirebaseFirestore.instance
+                  .collection('books')
+                  .where('categories', isEqualTo: category)
+                  .snapshots(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
@@ -433,45 +479,45 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: ListView(
               children:
-              _currentUser == null
-                  ? [
-                _buildDrawerItem(
-                  context,
-                  'Sign In',
-                  '/sign-in',
-                  Icons.login,
-                ),
-                _buildDrawerItem(
-                  context,
-                  'Settings',
-                  '/settings',
-                  Icons.settings,
-                ),
-              ]
-                  : [
-                _buildDrawerItem(
-                  context,
-                  'Profile',
-                  '/profile',
-                  Icons.person,
-                ),
-                ListTile(
-                  title: const Text(
-                    'Log Out',
-                    style: TextStyle(color: blackColor),
-                  ),
-                  leading: Icon(Icons.login, color: blackColor),
-                  onTap: () {
-                    _showLogoutDialog(context);
-                  },
-                ),
-                _buildDrawerItem(
-                  context,
-                  'Settings',
-                  '/settings',
-                  Icons.settings,
-                ),
-              ],
+                  _currentUser == null
+                      ? [
+                        _buildDrawerItem(
+                          context,
+                          'Sign In',
+                          '/sign-in',
+                          Icons.login,
+                        ),
+                        _buildDrawerItem(
+                          context,
+                          'Settings',
+                          '/settings',
+                          Icons.settings,
+                        ),
+                      ]
+                      : [
+                        _buildDrawerItem(
+                          context,
+                          'Profile',
+                          '/profile',
+                          Icons.person,
+                        ),
+                        ListTile(
+                          title: const Text(
+                            'Log Out',
+                            style: TextStyle(color: blackColor),
+                          ),
+                          leading: Icon(Icons.login, color: blackColor),
+                          onTap: () {
+                            _showLogoutDialog(context);
+                          },
+                        ),
+                        _buildDrawerItem(
+                          context,
+                          'Settings',
+                          '/settings',
+                          Icons.settings,
+                        ),
+                      ],
             ),
           ),
         ],
@@ -480,11 +526,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDrawerItem(
-      BuildContext context,
-      String title,
-      String route,
-      IconData icon,
-      ) {
+    BuildContext context,
+    String title,
+    String route,
+    IconData icon,
+  ) {
     return ListTile(
       title: Text(title, style: const TextStyle(color: blackColor)),
       leading: Icon(icon, color: blackColor),
