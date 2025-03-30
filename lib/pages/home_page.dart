@@ -235,13 +235,13 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(buttonRadius),
-                  boxShadow: [
+                  /*boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.15),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
-                  ],
+                  ],*/
                 ),
                 child: Row(
                   children: [
