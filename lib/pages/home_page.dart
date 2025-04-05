@@ -45,7 +45,6 @@ class _HomePageState extends State<HomePage> {
 
   final List<String> categories = [
     "Fiction",
-    "Fantasy",
     "Drama",
     "Philosophy",
     "History",
@@ -123,8 +122,8 @@ class _HomePageState extends State<HomePage> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
-            label: 'All Books',
+            icon: Icon(Icons.explore),
+            label: 'Explore',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'MyBooks'),
