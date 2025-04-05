@@ -7,6 +7,7 @@ import '../pages/faq_page.dart';
 import '../pages/book_detail_page.dart';
 import 'package:booknest/services/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../pages/genre_page.dart';
 
 const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
@@ -403,6 +404,11 @@ class _HomePageState extends State<HomePage> {
                         ),
                         onPressed: () {
                           // Navigate to a full category page if needed
+                          Navigator.pushNamed(
+                              context,
+                              '/genre',
+                              arguments: {'genre': 'Fiction'}, // kirim genre yang sesuai
+                            );
                         },
                         child: const Text(
                           "View All",
