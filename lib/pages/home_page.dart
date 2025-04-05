@@ -404,11 +404,12 @@ class _HomePageState extends State<HomePage> {
                         ),
                         onPressed: () {
                           // Navigate to a full category page if needed
-                          Navigator.pushNamed(
-                              context,
-                              '/genre',
-                              arguments: {'genre': 'Fiction'}, // kirim genre yang sesuai
-                            );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GenrePage(genre: category),
+                            ),
+                          );
                         },
                         child: const Text(
                           "View All",

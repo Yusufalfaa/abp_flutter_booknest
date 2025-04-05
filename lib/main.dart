@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
             page = const SignUpPage();
             break;
           case '/genre':
-            final args = settings.arguments as Map<String, dynamic>; // pastikan ada data
+            final args = settings.arguments as Map<String, dynamic>;
             final genre = args['genre'] as String; // ambil genre
             page = GenrePage(genre: genre); // kirim ke halaman genre
             break;
