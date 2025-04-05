@@ -3,8 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'book_detail_page.dart';
 
-class AllBooksPage extends StatelessWidget {
+class AllBooksPage extends StatefulWidget {
   const AllBooksPage({super.key});
+
+  @override
+  _AllBooksPageState createState() => _AllBooksPageState();
+}
+
+class _AllBooksPageState extends State<AllBooksPage> {
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +26,15 @@ class AllBooksPage extends StatelessWidget {
             Align(
               alignment: Alignment.center,
               child: Container(
-                width: 380, // Search bar width
-                height: 40, // Search bar height
-                margin: const EdgeInsets.only(bottom: 16),
+                width: 380,
+                height: 40,
+                margin: const EdgeInsets.only(top: 16),
                 child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value.trim();
+                    });
+                  },
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                     hintText: 'Book Title',
@@ -35,16 +47,40 @@ class AllBooksPage extends StatelessWidget {
               ),
             ),
 
-            // StreamBuilder for the list of books
+            // Show books only when there's a search query
             Expanded(
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance.collection('books').snapshots(),
+              child: _searchQuery.isEmpty
+                  ? const Center(
+                child: Text(
+                  'Please enter a book title to search',
+                  style: TextStyle(fontSize: 16),
+                ),
+              )
+                  : StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('books')
+                    .snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  var books = snapshot.data!.docs;
+                  var books = snapshot.data!.docs.where((doc) {
+                    var book = doc.data() as Map<String, dynamic>;
+                    return book['title']
+                        .toString()
+                        .toLowerCase()
+                        .contains(_searchQuery.toLowerCase());
+                  }).toList();
+
+                  if (books.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'Book not found',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    );
+                  }
 
                   return GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -67,7 +103,6 @@ class AllBooksPage extends StatelessWidget {
                             ),
                           );
                         },
-
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
@@ -90,6 +125,14 @@ class AllBooksPage extends StatelessWidget {
                                   width: double.infinity,
                                   height: 160,
                                   fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: double.infinity,
+                                      height: 160,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.book, size: 50),
+                                    );
+                                  },
                                 ),
                               ),
                               Padding(
