@@ -10,13 +10,13 @@ class GenrePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(color: Color(0xFFC76E6F)),
+        backgroundColor: Color(0xFFC76E6F),
+        iconTheme: const IconThemeData(color: Colors.black),
         title: Text(
           '$genre Books',
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.black),
         ),
         centerTitle: true,
         elevation: 0,
@@ -88,7 +88,7 @@ class GenrePage extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.white,
+                        color: Colors.black,
                         fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
