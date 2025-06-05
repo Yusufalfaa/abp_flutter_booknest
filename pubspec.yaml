@@ -42,7 +42,7 @@ dependencies:
   intl: ^0.20.2
   font_awesome_flutter: ^10.8.0
   url_launcher: ^6.3.1
-
+  flutter_launcher_icons: ^0.13.1
 
 
 dev_dependencies:
@@ -56,6 +56,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/IconTitle.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
@@ -76,6 +80,7 @@ flutter:
     - assets/book.png
     - assets/bgDarker.png
     - assets/imagetes1.jpg
+    - assets/IconTitle.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
