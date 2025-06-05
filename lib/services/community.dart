@@ -9,38 +9,41 @@ class CommunityService {
   // Fetch forum posts sorted by either replies or date
   Future<List<Forum>> getForumPosts({bool byReplies = true}) async {
     try {
-      QuerySnapshot querySnapshot;
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('forums')
+          .orderBy(byReplies ? 'replies' : 'date', descending: true)
+          .limit(10)
+          .get();
 
-      if (byReplies) {
-        querySnapshot = await FirebaseFirestore.instance
+      List<Forum> forumList = [];
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final postId = doc.id;
+
+        // Hitung reply secara akurat
+        final replySnapshot = await FirebaseFirestore.instance
             .collection('forums')
-            .orderBy('replies', descending: true)
-            .limit(10)
+            .doc(postId)
+            .collection('replies')
             .get();
-      } else {
-        querySnapshot = await FirebaseFirestore.instance
-            .collection('forums')
-            .orderBy('date', descending: true)
-            .limit(10)
-            .get();
+
+        int actualReplies = replySnapshot.docs.length;
+
+        forumList.add(Forum.fromMap({
+          'id': postId,
+          ...data,
+          'replies': actualReplies, // override field replies
+        }));
       }
 
-      print("Documents Retrieved: ${querySnapshot.docs.length}");
-
-      return querySnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        print("Forum Data: $data");
-
-        return Forum.fromMap({
-          'id': doc.id,
-          ...data,
-        });
-      }).toList();
+      return forumList;
     } catch (e) {
       print("Error getting forum posts: $e");
       return [];
     }
   }
+
 
   // Fetch a single forum post by ID
   Future<Forum> getForumPostById(String postId) async {
