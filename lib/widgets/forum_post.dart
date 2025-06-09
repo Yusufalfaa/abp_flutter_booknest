@@ -51,6 +51,7 @@ class ForumPost extends StatelessWidget {
     }
     return AssetImage('assets/25.png');
   }
+
   @override
   Widget build(BuildContext context) {
     // Format date into "07 March 2025"
@@ -78,10 +79,11 @@ class ForumPost extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Row to align username, date, and the delete icon (three-dot)
+                  // Header Row: username, date, delete menu
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Username + date vertically
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -101,7 +103,6 @@ class ForumPost extends StatelessWidget {
                       ),
 
                       if (onDeleteTap != null && userId == FirebaseAuth.instance.currentUser?.uid)
-                      // PopupMenuButton to display 3 dots menu with delete option
                         PopupMenuButton<String>(
                           icon: Icon(Icons.more_vert, size: 20),
                           color: lightColor,
@@ -137,7 +138,9 @@ class ForumPost extends StatelessWidget {
                     ],
                   ),
 
-                  SizedBox(height: 4),
+                  SizedBox(height: 8), // Spasi antara header dan konten
+
+                  // Konten post: title, content, replies (posisi kiri sejajar)
                   Text(
                     title,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

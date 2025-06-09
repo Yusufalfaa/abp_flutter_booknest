@@ -29,7 +29,9 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
     _replyController.addListener(() {
       int charCount = _replyController.text.length;
       if (charCount <= _maxLength) {
-        _charCount = charCount;
+        setState(() {
+          _charCount = charCount;
+        });
       }
     });
   }
@@ -41,9 +43,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
   }
 
   void _submitReply() async {
-    if (_replyController.text
-        .trim()
-        .isNotEmpty && _charCount <= _maxLength) {
+    if (_replyController.text.trim().isNotEmpty && _charCount <= _maxLength) {
       setState(() {
         _isLoading = true;
       });
@@ -61,7 +61,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
 
       await CommunityService().addReplyToPost(widget.originalPost.id, reply);
 
-      _fetchUpdatedForumPost();
+      await _fetchUpdatedForumPost();
 
       setState(() {
         _isLoading = false;
@@ -73,8 +73,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
 
   Future<void> _fetchUpdatedForumPost() async {
     try {
-      Forum updatedPost = await CommunityService().getForumPostById(
-          widget.originalPost.id);
+      Forum updatedPost = await CommunityService().getForumPostById(widget.originalPost.id);
       setState(() {
         widget.originalPost.replies = updatedPost.replies;
       });
@@ -99,10 +98,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
           children: [
             // Original Post Card
             FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(widget.originalPost.userId)
-                  .get(),
+              future: FirebaseFirestore.instance.collection('users').doc(widget.originalPost.userId).get(),
               builder: (context, snapshot) {
                 String? avatar;
                 if (snapshot.hasData && snapshot.data!.exists) {
@@ -146,18 +142,12 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.originalPost.username ??
-                                        'Unknown User',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14),
+                                    widget.originalPost.username ?? 'Unknown User',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                   ),
                                   Text(
-                                    DateFormat('dd MMMM yyyy')
-                                        .format(
-                                        widget.originalPost.date.toDate()),
-                                    style: const TextStyle(
-                                        color: Colors.grey, fontSize: 12),
+                                    DateFormat('dd MMMM yyyy').format(widget.originalPost.date.toDate()),
+                                    style: const TextStyle(color: Colors.grey, fontSize: 12),
                                   ),
                                 ],
                               ),
@@ -167,8 +157,7 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                         const SizedBox(height: 8),
                         Text(
                           widget.originalPost.title,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -182,14 +171,78 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
               },
             ),
 
+            // <-- TEXTAREA & POST BUTTON (hanya untuk user yang login) -->
+            if (user != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: TextField(
+                  controller: _replyController,
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Write your reply here...',
+                    filled: true,
+                    fillColor: Colors.grey[200],
+                    border: OutlineInputBorder(
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(8),
+                        bottomRight: Radius.circular(8),
+                      ),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.all(12),
+                    counterText: '',
+                  ),
+                  maxLength: _maxLength,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      '$_charCount/$_maxLength',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 100,
+                      height: 36,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submitReply,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                            : const Text('Post'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 12),
+
             const Divider(thickness: 0.5, color: Colors.grey),
             const SizedBox(height: 12),
 
             Row(
               children: [
-                const Icon(Icons.chat_bubble_outline,
-                    size: 16, color: Colors.grey),
+                const Icon(Icons.chat_bubble_outline, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
                   '${widget.originalPost.replies} Replies',
@@ -197,12 +250,19 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
+
+
+
+
+
+              const SizedBox(height: 12),
+            ],
 
             Expanded(
               child: StreamBuilder<List<Reply>>(
-                stream: CommunityService()
-                    .getRepliesForPost(widget.originalPost.id),
+                stream: CommunityService().getRepliesForPost(widget.originalPost.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
