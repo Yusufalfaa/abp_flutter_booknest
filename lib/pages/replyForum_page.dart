@@ -40,9 +40,10 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
     super.dispose();
   }
 
-  // Function to submit the reply
   void _submitReply() async {
-    if (_replyController.text.trim().isNotEmpty && _charCount <= _maxLength) {
+    if (_replyController.text
+        .trim()
+        .isNotEmpty && _charCount <= _maxLength) {
       setState(() {
         _isLoading = true;
       });
@@ -50,7 +51,6 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
-      // Create a new reply object
       Reply reply = Reply(
         id: '',
         userId: user.uid,
@@ -59,10 +59,8 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
         date: Timestamp.now(),
       );
 
-      // Add the reply to the post
       await CommunityService().addReplyToPost(widget.originalPost.id, reply);
 
-      // Fetch the updated replies to get the new reply count
       _fetchUpdatedForumPost();
 
       setState(() {
@@ -73,13 +71,10 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
     }
   }
 
-  // Fetch the updated forum post and update the reply count
   Future<void> _fetchUpdatedForumPost() async {
     try {
-      // Fetch the updated forum post from Firestore
-      Forum updatedPost = await CommunityService().getForumPostById(widget.originalPost.id);
-
-      // Update the replies count in the UI
+      Forum updatedPost = await CommunityService().getForumPostById(
+          widget.originalPost.id);
       setState(() {
         widget.originalPost.replies = updatedPost.replies;
       });
@@ -103,126 +98,102 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Original Post Card
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              color: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(widget.originalPost.userId)
+                  .get(),
+              builder: (context, snapshot) {
+                String? avatar;
+                if (snapshot.hasData && snapshot.data!.exists) {
+                  final data = snapshot.data!.data() as Map<String, dynamic>;
+                  if (data.containsKey('avatar')) {
+                    avatar = data['avatar'];
+                  }
+                }
+
+                ImageProvider avatarImage;
+                if (avatar == null || avatar.isEmpty) {
+                  avatarImage = const AssetImage('assets/25.png');
+                } else if (avatar.startsWith('/assets/')) {
+                  avatarImage = AssetImage(avatar.substring(1));
+                } else if (avatar.startsWith('http')) {
+                  avatarImage = NetworkImage(avatar);
+                } else {
+                  avatarImage = const AssetImage('assets/25.png');
+                }
+
+                return Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  color: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const CircleAvatar(
-                          backgroundColor: Colors.grey,
-                          radius: 20,
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: avatarImage,
+                              radius: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.originalPost.username ??
+                                        'Unknown User',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14),
+                                  ),
+                                  Text(
+                                    DateFormat('dd MMMM yyyy')
+                                        .format(
+                                        widget.originalPost.date.toDate()),
+                                    style: const TextStyle(
+                                        color: Colors.grey, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.originalPost.username ?? 'Unknown User',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                              ),
-                              Text(
-                                DateFormat('dd MMMM yyyy').format(widget.originalPost.date.toDate()),
-                                style: const TextStyle(color: Colors.grey, fontSize: 12),
-                              ),
-                            ],
-                          ),
+                        const SizedBox(height: 8),
+                        Text(
+                          widget.originalPost.title,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.originalPost.content ?? 'No content available',
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.originalPost.title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.originalPost.content ?? 'No content available',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
 
-            // Textarea for user to write a reply if logged in
-            if (user != null) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: TextField(
-                  controller: _replyController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Write your reply here...',
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(8),
-                        bottomRight: Radius.circular(8),
-                      ),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.all(12),
-                    counterText: '',
-                  ),
-                  maxLength: _maxLength,
-                ),
-              ),
-
-              // Post Button
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      '$_charCount/$_maxLength',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox(
-                      width: 100,
-                      height: 36,
-                      child: ElevatedButton(
-                        onPressed: _submitReply,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('Post'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
-            // Divider
             const SizedBox(height: 12),
             const Divider(thickness: 0.5, color: Colors.grey),
             const SizedBox(height: 12),
 
             Row(
               children: [
-                Icon(Icons.chat_bubble_outline, size: 16, color: Colors.grey),
-                SizedBox(width: 4),
+                const Icon(Icons.chat_bubble_outline,
+                    size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
                 Text(
                   '${widget.originalPost.replies} Replies',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
               ],
             ),
@@ -230,7 +201,8 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
 
             Expanded(
               child: StreamBuilder<List<Reply>>(
-                stream: CommunityService().getRepliesForPost(widget.originalPost.id),
+                stream: CommunityService()
+                    .getRepliesForPost(widget.originalPost.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -250,16 +222,13 @@ class _ReplyForumPageState extends State<ReplyForumPage> {
                         replyId: reply.id,
                         postId: widget.originalPost.id,
                         userId: reply.userId,
-                        onDelete: () {
-                          // When the reply is deleted, refresh the reply count
-                          _fetchUpdatedForumPost();
-                        },
+                        onDelete: _fetchUpdatedForumPost,
                       );
                     },
                   );
                 },
               ),
-            )
+            ),
           ],
         ),
       ),

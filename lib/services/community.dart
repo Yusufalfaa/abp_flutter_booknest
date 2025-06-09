@@ -65,6 +65,32 @@ class CommunityService {
     }
   }
 
+  // Fetch a single forum post by ID
+  Future<Map<String, String>> getAvatarUrlsForUserIds(List<String> userIds) async {
+    Map<String, String> avatarUrls = {};
+
+    if (userIds.isEmpty) return avatarUrls;
+
+    // Firestore batasi whereIn maksimal 10 items per query
+    const int batchSize = 10;
+    for (int i = 0; i < userIds.length; i += batchSize) {
+      final end = (i + batchSize > userIds.length) ? userIds.length : i + batchSize;
+      final batch = userIds.sublist(i, end);
+
+      QuerySnapshot snapshot = await _firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: batch)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        avatarUrls[doc.id] = data['avatar'] ?? "";
+      }
+    }
+
+    return avatarUrls;
+  }
+
   // Add a new forum post
   Future<String> createForumPost(Forum forum) async {
     try {
