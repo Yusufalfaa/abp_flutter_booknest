@@ -5,9 +5,10 @@ import '../pages/forum_page.dart';
 import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
 import '../pages/book_detail_page.dart';
+import '../pages/genre_page.dart';
 import 'package:booknest/services/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../pages/genre_page.dart';
+
 
 const Color lightColor = Color(0xFFF1EFE3);
 const Color backgroundColor = Color(0xFFF8F8F8);
