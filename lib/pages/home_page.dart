@@ -189,7 +189,7 @@ class _HomePageState extends State<HomePage> {
             "We sorted the best for you",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          if (userId != null) _buildBookRecommendation(userId),
+          if (userId != null) _buildRandomBooks(userId),
           ...categories
               .map((category) => _buildCategorySection(category))
               .toList(),
@@ -198,23 +198,77 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBookRecommendation(String userId) {
-    // Accept userId as a parameter
+  Widget _buildRandomBooks(String userId) {
     final BookService bookService = BookService();
+    const double buttonRadius = 30; // Define if not global
+    const Color primaryColor = Color(0xFFC76E6F); // Red from BookDetailsPage
+    const Color removeColor = Color(0xFFB0B0B0); // Grey from BookDetailsPage
 
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('books').snapshots(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: Future.microtask(() async {
+        try {
+          // Fetch up to 20 books to allow shuffling (increase if needed)
+          final booksSnapshot =
+              await FirebaseFirestore.instance
+                  .collection('books')
+                  .limit(20)
+                  .get();
+          final allBooks =
+              booksSnapshot.docs
+                  .map(
+                    (doc) => {
+                      'id': doc.id,
+                      ...doc.data() as Map<String, dynamic>,
+                    },
+                  )
+                  .toList()
+                ..shuffle(); // Randomize
+
+          // Limit to 8 books
+          final randomBooks = allBooks.take(8).toList();
+
+          // Check added status for each book
+          final booksWithStatus = <Map<String, dynamic>>[];
+          for (var book in randomBooks) {
+            final isbn = book['isbn13'] ?? book['id'];
+            String? docId;
+            if (userId.isNotEmpty) {
+              final userBookSnapshot =
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(userId)
+                      .collection('books')
+                      .where('isbn13', isEqualTo: isbn)
+                      .limit(1)
+                      .get();
+              if (userBookSnapshot.docs.isNotEmpty) {
+                docId = userBookSnapshot.docs.first.id;
+              }
+            }
+            booksWithStatus.add({
+              ...book,
+              'isAdded': docId != null,
+              'userBookDocId': docId,
+            });
+          }
+
+          return booksWithStatus;
+        } catch (e) {
+          print('Error fetching books: $e'); // Log for debugging
+          return [];
+        }
+      }),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        var books = snapshot.data!.docs;
-        int maxRecommendations = 8;
-        int itemCount =
-            books.length > maxRecommendations
-                ? maxRecommendations
-                : books.length;
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(child: Text('No books available'));
+        }
+
+        final books = snapshot.data!;
+        final itemCount = books.length;
 
         return SizedBox(
           height: 150,
@@ -223,8 +277,10 @@ class _HomePageState extends State<HomePage> {
             itemCount: itemCount,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             itemBuilder: (context, index) {
-              var book = books[index].data() as Map<String, dynamic>;
-              String bookId = books[index].id;
+              final book = books[index];
+              final bookId = book['isbn13'] ?? book['id'];
+              final isAdded = book['isAdded'] as bool;
+              final userBookDocId = book['userBookDocId'] as String?;
 
               return Container(
                 width: MediaQuery.of(context).size.width * 0.8,
@@ -234,12 +290,12 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(buttonRadius),
                   /*boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],*/
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],*/
                 ),
                 child: Row(
                   children: [
@@ -279,7 +335,8 @@ class _HomePageState extends State<HomePage> {
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
+                              backgroundColor:
+                                  isAdded ? removeColor : primaryColor,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
                                   buttonRadius,
@@ -291,45 +348,88 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             onPressed: () async {
-                              try {
-                                await bookService.addBook(userId, {
-                                  "isbn13": book["isbn13"] ?? "",
-                                  "title": book["title"] ?? "No Title",
-                                  "authors":
-                                      book["authors"] ?? "Unknown Author",
-                                  "categories":
-                                      book["categories"] ?? "Uncategorized",
-                                  "thumbnail": book["thumbnail"] ?? "",
-                                  "description":
-                                      book["description"] ?? "No Description",
-                                });
-
-                                print(
-                                  "Book '${book["title"]}' added to user $userId",
-                                ); // Log the added book
-
+                              if (userId.isEmpty) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text(
-                                      "${book["title"]} added to your list!",
+                                      'Please log in to modify your book list.',
                                     ),
-                                    duration: const Duration(seconds: 2),
                                   ),
                                 );
+                                return;
+                              }
+
+                              try {
+                                if (isAdded && userBookDocId != null) {
+                                  // Remove book
+                                  await bookService.removeBook(
+                                    userId,
+                                    userBookDocId,
+                                  );
+                                  setState(() {
+                                    book['isAdded'] = false;
+                                    book['userBookDocId'] = null;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "${book['title']} removed from your list!",
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                } else {
+                                  // Add book
+                                  await bookService.addBook(userId, {
+                                    'isbn13': book['isbn13'] ?? book['id'],
+                                    'title': book['title'] ?? 'No Title',
+                                    'authors':
+                                        book['authors'] ?? 'Unknown Author',
+                                    'categories':
+                                        book['categories'] ?? 'Uncategorized',
+                                    'thumbnail': book['thumbnail'] ?? '',
+                                    'description':
+                                        book['description'] ?? 'No Description',
+                                  });
+                                  // Fetch new doc ID
+                                  final userBookSnapshot =
+                                      await FirebaseFirestore.instance
+                                          .collection('users')
+                                          .doc(userId)
+                                          .collection('books')
+                                          .where('isbn13', isEqualTo: bookId)
+                                          .limit(1)
+                                          .get();
+                                  if (userBookSnapshot.docs.isNotEmpty) {
+                                    setState(() {
+                                      book['isAdded'] = true;
+                                      book['userBookDocId'] =
+                                          userBookSnapshot.docs.first.id;
+                                    });
+                                  }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "${book['title']} added to your list!",
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
                               } catch (e) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
-                                      "Failed to add book: ${e.toString()}",
+                                      'Failed to modify book: ${e.toString()}',
                                     ),
                                     duration: const Duration(seconds: 2),
                                   ),
                                 );
                               }
                             },
-                            child: const Text(
-                              "Add to List",
-                              style: TextStyle(
+                            child: Text(
+                              isAdded ? 'Remove from List' : 'Add to List',
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.white,
                               ),
