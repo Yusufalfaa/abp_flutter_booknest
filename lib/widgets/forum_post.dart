@@ -2,9 +2,11 @@ import 'package:booknest/main.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ForumPost extends StatelessWidget {
   final String username;
+  final String? avatarUrl;
   final String date;
   final String title;
   final String content;
@@ -15,6 +17,7 @@ class ForumPost extends StatelessWidget {
 
   const ForumPost({
     required this.username,
+    required this.avatarUrl,
     required this.date,
     required this.title,
     required this.content,
@@ -23,6 +26,31 @@ class ForumPost extends StatelessWidget {
     required this.onReplyTap,
     this.onDeleteTap,
   });
+
+  Future<String?> _fetchAvatarUrl(String userId) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (doc.exists) {
+        return doc.data()?['avatar'] as String?;
+      }
+    } catch (e) {
+      print('Error fetching avatar: $e');
+    }
+    return null;
+  }
+
+  ImageProvider _getAvatarImage(String? avatar) {
+    if (avatar == null || avatar.isEmpty) {
+      return AssetImage('assets/25.png');
+    }
+    if (avatar.startsWith('/assets/')) {
+      return AssetImage(avatar.substring(1)); // hapus slash depan
+    }
+    if (avatar.startsWith('http')) {
+      return NetworkImage(avatar);
+    }
+    return AssetImage('assets/25.png');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,18 +70,20 @@ class ForumPost extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CircleAvatar(
-              backgroundColor: Colors.grey,
               radius: 20,
+              backgroundColor: Colors.grey[300],
+              backgroundImage: _getAvatarImage(avatarUrl),
             ),
             SizedBox(width: 8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Row to align username, date, and the delete icon (three-dot)
+                  // Header Row: username, date, delete menu
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Username + date vertically
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -73,7 +103,6 @@ class ForumPost extends StatelessWidget {
                       ),
 
                       if (onDeleteTap != null && userId == FirebaseAuth.instance.currentUser?.uid)
-                      // PopupMenuButton to display 3 dots menu with delete option
                         PopupMenuButton<String>(
                           icon: Icon(Icons.more_vert, size: 20),
                           color: lightColor,
@@ -109,7 +138,9 @@ class ForumPost extends StatelessWidget {
                     ],
                   ),
 
-                  SizedBox(height: 4),
+                  SizedBox(height: 8), // Spasi antara header dan konten
+
+                  // Konten post: title, content, replies (posisi kiri sejajar)
                   Text(
                     title,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

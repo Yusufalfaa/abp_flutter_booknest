@@ -12,6 +12,9 @@ import 'pages/mybooks_page.dart';
 import 'pages/faq_page.dart';
 import 'pages/sign_in_page.dart';
 import 'pages/book_detail_page.dart';
+import 'pages/genre_page.dart';
+import 'pages/profile_page.dart';
+
 
 // Warna yang digunakan dalam aplikasi
 const Color lightColor = Color(0xFFF1EFE3);
@@ -39,6 +42,9 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         Widget page;
         switch (settings.name) {
+          case '/profile':
+            page = const ProfilePage();
+            break;
           case '/all-books':
             page = const AllBooksPage();
             break;
@@ -59,6 +65,11 @@ class MyApp extends StatelessWidget {
             break;
           case '/sign-up':
             page = const SignUpPage();
+            break;
+          case '/genre':
+            final args = settings.arguments as Map<String, dynamic>;
+            final genre = args['genre'] as String;
+            page = GenrePage(genre: genre);
             break;
           case '/bookdetail':
             final book = settings.arguments as Map<String, dynamic>;

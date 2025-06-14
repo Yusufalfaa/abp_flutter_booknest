@@ -6,6 +6,7 @@ import '../pages/mybooks_page.dart';
 import '../pages/faq_page.dart';
 import '../pages/book_detail_page.dart';
 import '../services/book_service.dart';
+import '../pages/genre_page.dart';
 import 'package:booknest/services/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -125,10 +126,7 @@ class _HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.library_books),
-            label: 'All Books',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explore'),
           BottomNavigationBarItem(icon: Icon(Icons.forum), label: 'Forum'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'MyBooks'),
         ],
@@ -448,6 +446,12 @@ class _HomePageState extends State<HomePage> {
                         ),
                         onPressed: () {
                           // Navigate to a full category page if needed
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GenrePage(genre: category),
+                            ),
+                          );
                         },
                         child: const Text(
                           "View All",
